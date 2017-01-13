@@ -85,13 +85,6 @@ def PerformDrive(meters):
     # Perform the motion
     PerformMove(driveLeft, driveRight, numSeconds)
  
-# Get the values
-def GetRightSpeed()
-    return driveRight
-
-def GetLeftSpeed()
-    return driveLeft
-
 # Run test mode if required
 if testMode:
     # Show settings
