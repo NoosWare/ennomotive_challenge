@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/pi/ennomotive_challenge/ros_main_ws/devel/setup.sh
