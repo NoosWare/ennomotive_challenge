@@ -8,6 +8,9 @@ import PicoBorgRev
 import time
 import math
 import sys
+import pygame
+import os
+import bluetooth
  
 # Setup the PicoBorg Reverse
 PBR = PicoBorgRev.PicoBorgRev()
@@ -27,7 +30,7 @@ if not PBR.foundChip:
 #PBR.SetEpoIgnore(True)                 # Uncomment to disable EPO latch, needed if you do not have a switch / jumper
 PBR.SetCommsFailsafe(False)             # Disable the communications failsafe
 PBR.ResetEpo()
- 
+
 # Movement settings (worked out from our DiddyBorg on a smooth surface)
 timeForward1m = 5.7                     # Number of seconds needed to move about 1 meter
 timeSpin360   = 4.8                     # Number of seconds needed to make a full left / right spin
@@ -42,7 +45,9 @@ if voltageOut > voltageIn:
     maxPower = 1.0
 else:
     maxPower = voltageOut / float(voltageIn)
- 
+
+
+#---------Functions------------
 # Function to perform a general movement
 def PerformMove(driveLeft, driveRight, numSeconds):
     # Set the motors running
@@ -84,26 +89,7 @@ def PerformDrive(meters):
     numSeconds = meters * timeForward1m
     # Perform the motion
     PerformMove(driveLeft, driveRight, numSeconds)
- 
-# Run test mode if required
-if testMode:
-    # Show settings
-    print 'Current settings are:'
-    print '    timeForward1m = %f' % (timeForward1m)
-    print '    timeSpin360 = %f' % (timeSpin360)
-    # Check distance
-    raw_input('Check distance, Press ENTER to start')
-    print 'Drive forward 30cm'
-    PerformDrive(+0.3)
-    raw_input('Press ENTER to continue')
-    print 'Drive reverse 30cm'
-    PerformDrive(-0.3)
-    # Check spinning
-    raw_input('Check spinning, Press ENTER to continue')
-    print 'Spinning left'
-    PerformSpin(-360)
-    raw_input('Press ENTER to continue')
-    print 'Spinning Right'
-    PerformSpin(+360)
-    print 'Update the settings as needed, then test again or disable test mode'
-    sys.exit(0)
+
+def switchOffMotors():
+    PBR.MotorsOff()
+

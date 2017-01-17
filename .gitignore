@@ -1,0 +1,5 @@
+*.swp
+ ros_main_ws/devel/
+ ros_slave_ws/devel/
+ ros_main_ws/build/
+ ros_slave_ws/build/
