@@ -56,7 +56,7 @@ def PerformMove(driveLeft, driveRight, numSeconds):
     # Wait for the time
     time.sleep(numSeconds)
     # Turn the motors off
-    PBR.MotorsOff()
+    #PBR.MotorsOff()
  
 # Function to spin an angle in degrees
 def PerformSpin(angle):
