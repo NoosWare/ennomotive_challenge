@@ -29,6 +29,7 @@ add_executable(imu_node src/imu_node.cpp
                         src/LSM303.cpp
                         src/MinIMU9.cpp
                         src/MinIMU9.cpp
+                        src/imu_broadcaster.cpp
               )
 
 # add_dependencies(imu_node_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

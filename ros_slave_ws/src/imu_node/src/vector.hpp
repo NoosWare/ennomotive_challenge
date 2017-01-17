@@ -84,7 +84,7 @@ static inline matrix rotationFromCompass(
 // dt is the time.
 //
 static inline void rotate(
-                            quaternion& rotation, 
+                            quaternion & rotation, 
                             const vector& w, 
                             float dt
                          )
