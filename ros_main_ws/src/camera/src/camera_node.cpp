@@ -10,6 +10,7 @@
 #include <raspicam/raspicam_cv.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <boost/program_options.hpp>
+#include "object_detect.hpp"
 
 namespace po = boost::program_options;
 /**
@@ -44,13 +45,13 @@ int main(int argc, char **argv)
         camera.set(CV_CAP_PROP_SATURATION, vm["saturation"].as<int>());
     }
     else {
-        camera.set(CV_CAP_PROP_SATURATION, 20);
+        camera.set(CV_CAP_PROP_SATURATION, 40);
     }
     if (vm.count("brightness")) {
         camera.set(CV_CAP_PROP_BRIGHTNESS, vm["brightness"].as<int>());
     }
     else {
-        camera.set(CV_CAP_PROP_BRIGHTNESS, 70);
+        camera.set(CV_CAP_PROP_BRIGHTNESS, 60);
     }
     if (vm.count("contrast")) {
         camera.set(CV_CAP_PROP_CONTRAST, vm["contrast"].as<int>());
@@ -73,17 +74,26 @@ int main(int argc, char **argv)
     auto pub = n.advertise<std_msgs::String>("cvision", 1000);
     ros::Rate loop_rate(10);
     cv::Mat image;
+    object_detect detector;
 
     // on a loooooop
-    //while (ros::ok()) {
+    while (ros::ok()) {
         camera.grab();
         camera.retrieve(image);
-        // TODO: run all the cv algorithms here
-    //}
+        // grubcut implementation takes 3 seconds!!!
+        //cv::Mat grubcut = detector.grub_cut(image);
+        //double t = (double)cv::getTickCount();
+        cv::Mat convexed = detector.convex_roi(image);
+        //t = (double)cv::getTickCount() - t;
+        //printf("eta = %gms\n", t*1000./cv::getTickFrequency());
+        int count = cv::countNonZero(convexed);
+        printf("nnz = %d\n", count);
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
 
-    std::ostringstream os;
-    os << "image_test.jpg";
-    cv::imwrite(os.str(), image);
+    //cv::imwrite("image.png", image);
+    //cv::imwrite("convexhull.png", convexed);
 
     camera.release();
     return 0;

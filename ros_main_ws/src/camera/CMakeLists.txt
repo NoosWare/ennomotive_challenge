@@ -11,5 +11,11 @@ catkin_package(
 add_definitions(-std=c++1y)
 include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
-add_executable(camera_node src/camera_node.cpp)
-target_link_libraries(camera_node ${catkin_LIBRARIES} ${raspicam_CV_LIBS} ${Boost_LIBRARIES})
+add_executable(camera_node src/camera_node.cpp
+                           src/object_detect.cpp)
+
+target_link_libraries(camera_node ${catkin_LIBRARIES} 
+                                  ${raspicam_CV_LIBS} 
+                                  ${Boost_LIBRARIES}
+                                  ${OpenCV_LIBS}
+)
