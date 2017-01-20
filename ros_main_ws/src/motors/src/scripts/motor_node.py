@@ -10,8 +10,11 @@ def callback(data):
     speed = json.loads(data.data)
     #print(speed['right_speed'])
     #print(speed['left_speed'])
-    # left speed, right speed, time to run (0.1 sec = 100ms)
-    PerformMove(float(speed['left_speed']), float(speed['right_speed']), 0.1)
+    if float(speed['left_speed']) != 100 || float(speed['right_speed']) != 100:
+        PerformMove(float(speed['left_speed']), float(speed['right_speed']), 0.1)
+    else
+        switchOffMotors()
+        
         
 if __name__ == '__main__':
 

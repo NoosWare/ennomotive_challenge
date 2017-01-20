@@ -6,13 +6,18 @@
  * @brief detect object contours in the foreground
  * ...
  */
-class object_detect
+namespace cv_detect
 {
-public:
+    typedef std::tuple<int,int,float,float> hough_line;
 
-    cv::Mat grub_cut(const cv::Mat & image) const;
+    cv::Mat region_of_interest(const cv::Mat & image);
 
-    cv::Mat convex_roi(const cv::Mat & image) const;
+    /// @brief obtain a matrix of contour points
+    int contour_pixels(const cv::Mat & image);
 
-};
+    /// @brief obtain a list of lines
+    /// @return is a pair of (x, y, θ, μ)
+    /// where x,y is origin θ is angle and μ is size
+    std::vector<hough_line> find_lines(const cv::Mat & image);
+}
 #endif

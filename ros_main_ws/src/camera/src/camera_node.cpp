@@ -4,12 +4,13 @@
  * @date 18.01.2017
  * @author Alex Giokas
  */
-#include "ros/ros.h"
-#include "std_msgs/String.h"
-#include <sstream>
-#include <raspicam/raspicam_cv.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <boost/program_options.hpp>
+#include <sstream>
+#include <thread>
+#include <raspicam/raspicam_cv.h>
+#include "ros/ros.h"
+#include "std_msgs/String.h"
 #include "object_detect.hpp"
 
 namespace po = boost::program_options;
@@ -74,26 +75,34 @@ int main(int argc, char **argv)
     auto pub = n.advertise<std_msgs::String>("cvision", 1000);
     ros::Rate loop_rate(10);
     cv::Mat image;
-    object_detect detector;
 
-    // on a loooooop
-    while (ros::ok()) {
+    //while (ros::ok()) {
         camera.grab();
         camera.retrieve(image);
-        // grubcut implementation takes 3 seconds!!!
-        //cv::Mat grubcut = detector.grub_cut(image);
-        //double t = (double)cv::getTickCount();
-        cv::Mat convexed = detector.convex_roi(image);
-        //t = (double)cv::getTickCount() - t;
-        //printf("eta = %gms\n", t*1000./cv::getTickFrequency());
-        int count = cv::countNonZero(convexed);
-        printf("nnz = %d\n", count);
-        ros::spinOnce();
-        loop_rate.sleep();
-    }
+
+        double t = (double)cv::getTickCount();
+        int pixels;
+        std::vector<cv_detect::hough_line> lines;
+
+        std::thread thread_a([&]() {
+            pixels = cv_detect::contour_pixels(image);
+        });
+        std::thread thread_b([&]() {
+            lines = cv_detect::find_lines(image); 
+        });
+
+        thread_a.join();
+        thread_b.join();        
+        t = (double)cv::getTickCount() - t;
+        printf("eta = %gms\n", t*1000./cv::getTickFrequency());
+        std::cout << "pixesl: " << pixels << std::endl;
+
+        //ros::spinOnce();
+        //loop_rate.sleep();
+    //}
 
     //cv::imwrite("image.png", image);
-    //cv::imwrite("convexhull.png", convexed);
+    //cv::imwrite("lines.png", lines);
 
     camera.release();
     return 0;
