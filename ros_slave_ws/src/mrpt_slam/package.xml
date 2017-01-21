@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <name>mrpt_slam</name>
+  <version>0.1.0</version>
+  <description>The mrpt_slam package read IMU and Laser values to do SLAM with MRPT library</description>
+  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
+  <maintainer email="m.ramos@ortelio.co.uk">Maria Ramos</maintainer>
+  <license>Apache 2.0</license>
+  <url type="website">https://github.com/ortelio/ennomotive_challenge</url>
+  <!-- The *_depend tags are used to specify dependencies -->
+  <!-- Dependencies can be catkin packages or system dependencies -->
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+  </export>
+</package>

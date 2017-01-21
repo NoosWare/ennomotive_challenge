@@ -1,11 +1,11 @@
 #ifndef _imu_broadcaster_HPP
 #define _imu_broadcaster_HPP
+#include <mrpt/poses/CPose3D.h>
+#include <mrpt/slam/CObservationIMU.h>
+
 #include "vector.hpp"
 #include "MinIMU9.hpp"
-#include "std_msgs/String.h"
-#include "ros/ros.h"
 #include "includes.ihh"
-#include "sensor_msgs/Imu.h"
 /**
  * @brief bridge class which uses IMU/I2C and publishes IMU sensor data
  * @version 0.1.0
@@ -17,14 +17,21 @@ class imu_broadcaster
 public:
 
     /// construct
-    imu_broadcaster(ros::NodeHandle & n);
+    imu_broadcaster();
 
-    /// @brief broadcast once
-    void broadcast();
+    /// @return quaternion and velocity
+    void read(const std::shared_ptr<mrpt::slam::CObservationIMU> obs);
 
     /// @brief broadcast TF of the robot
-    void robot_transform();
+    void make_velocity(vector acceleration);
 
+    /// @brief get latest position stimation
+    vector get_velocity();
+
+    /// @brief convert to CPose3D
+    //mrpt::poses::CPose3D convert_to_3dpose();
+
+    ///
 protected: 
 
     // ETA in ms
@@ -40,9 +47,18 @@ protected:
                  );
 
 private:
+    ///Rotation
     quaternion rotation__;
+    ///IMU
     MinIMU9 imu__;
+    ///seconds
     unsigned int start__ = 0;
-    ros::Publisher imu_pub__; 
+    ///Previous velocity
+    vector previous_velocity__;
+    ///Previous position
+    vector previous_position__;
+    ///delta time
+    float dt__ = 0.0f;
+
 };
 #endif
