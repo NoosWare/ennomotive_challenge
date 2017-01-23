@@ -11,13 +11,13 @@ imu_broadcaster::imu_broadcaster()
     imu__.enable();
     imu__.measureOffsets();
     quaternion rotation__ = quaternion::Identity();
-    previous_velocity__ = vector(0.0, 0.0, 0.0);
-    previous_position__ = vector(0.0, 0.0, 0.0);
+    velocity__ = vector(0.0, 0.0, 0.0);
+    position__ = vector(0.0, 0.0, 0.0);
+    prev_raw_accel__ = vector(0.0, 0.0, 1.0);// vector(-0.0122, -0.03538, 1.05359);
+    prev_filt_accel__ = vector(0.0, 0.0, 0.0);// vector(-0.0040875, 0.00171853, 0.00699055);
 }
 
-/// @brief broadcast once
-//std::pair<quaternion, vector> imu_broadcaster::read()
-void imu_broadcaster::read(const std::shared_ptr<mrpt::slam::CObservationIMU> obs)
+std::tuple<vector, vector, vector, quaternion> imu_broadcaster::read()
 {
     int last_start = start__;
     start__ = millis();
@@ -28,33 +28,22 @@ void imu_broadcaster::read(const std::shared_ptr<mrpt::slam::CObservationIMU> ob
     }
     // angular velocity => gyroscope
     vector angular_velocity = imu__.readGyro();
-    // linear acceleration => accelelerometer
-    vector acceleration = imu__.readAcc();
-    //acceleration -= vector(0.0030f, 0.0051f, 0.250f);
     // magnetic field in 3 axes
     vector magnetic_field = imu__.readMag();
-    consume(rotation__, dt__, angular_velocity, acceleration, magnetic_field);
 
-    obs->rawMeasurements[mrpt::slam::IMU_X_ACC] = acceleration[0];
-    obs->rawMeasurements[mrpt::slam::IMU_Y_ACC] = acceleration[1];
-    obs->rawMeasurements[mrpt::slam::IMU_Z_ACC] = acceleration[2];
-    obs->dataIsPresent[mrpt::slam::IMU_X_ACC] = true;
-    obs->dataIsPresent[mrpt::slam::IMU_Y_ACC] = true;
-    obs->dataIsPresent[mrpt::slam::IMU_Z_ACC] = true;
+    vector acceleration = imu__.readAcc();
+    // linear acceleration => accelelerometer
+    vector filtered = dc_block_filter(vector(0.999, 0.999, 0.999), 
+                                      acceleration,
+                                      prev_raw_accel__,
+                                      prev_filt_accel__);
+    prev_filt_accel__ = filtered;
+    prev_raw_accel__ = acceleration;
 
-    obs->rawMeasurements[mrpt::slam::IMU_YAW_VEL]   = angular_velocity[2];
-    obs->rawMeasurements[mrpt::slam::IMU_PITCH_VEL] = angular_velocity[1];
-    obs->rawMeasurements[mrpt::slam::IMU_ROLL_VEL]  = angular_velocity[0];
-    obs->dataIsPresent[mrpt::slam::IMU_YAW_VEL] = true;
-    obs->dataIsPresent[mrpt::slam::IMU_PITCH_VEL] = true;
-    obs->dataIsPresent[mrpt::slam::IMU_ROLL_VEL] = true;
+    to_quaternion(rotation__, dt__, angular_velocity, filtered, magnetic_field);
+    auto position = make_velocity(filtered);
 
-    obs->rawMeasurements[mrpt::slam::IMU_MAG_X] = magnetic_field[0];
-    obs->rawMeasurements[mrpt::slam::IMU_MAG_Y] = magnetic_field[1];
-    obs->rawMeasurements[mrpt::slam::IMU_MAG_Z] = magnetic_field[2];
-    obs->dataIsPresent[mrpt::slam::IMU_MAG_X] = true;
-    obs->dataIsPresent[mrpt::slam::IMU_MAG_Y] = true;
-    obs->dataIsPresent[mrpt::slam::IMU_MAG_Z] = true;
+    return std::make_tuple(acceleration, filtered, position, rotation__);
 }
 
 unsigned int imu_broadcaster::millis()
@@ -64,13 +53,13 @@ unsigned int imu_broadcaster::millis()
     return (tv.tv_sec) * 1000 + (tv.tv_usec)/1000;
 }
 
-void imu_broadcaster::consume(
-                                quaternion & rotation, 
-                                float dt, 
-                                const vector & angular_velocity,
-                                const vector & acceleration, 
-                                const vector & magnetic_field
-                             )
+void imu_broadcaster::to_quaternion(
+                                      quaternion & rotation, 
+                                      float dt, 
+                                      const vector & angular_velocity,
+                                      const vector & acceleration, 
+                                      const vector & magnetic_field
+                                   )
 {
     vector correction = vector(0, 0, 0);
     if (abs(acceleration.norm() - 1) <= 0.3) {
@@ -88,32 +77,39 @@ void imu_broadcaster::consume(
     }
     rotate(rotation, angular_velocity + correction, dt);
     ///
-    make_velocity(acceleration);
 }
 
-void imu_broadcaster::make_velocity(vector acceleration)
+vector imu_broadcaster::make_velocity(vector acceleration)
 {
-    previous_position__ = previous_position__ 
-                        + (previous_velocity__ * dt__) 
-                        + (acceleration * (dt__ * dt__) / 2.f );
-
-    previous_velocity__ = (previous_velocity__ + (acceleration * dt__));
+    velocity__ = velocity__ + (acceleration * dt__);
+    //position__ = position__ + (velocity__ * dt__);
+    position__ = position__ + ((acceleration * (dt__ * dt__)) / 2.0f);
+    return position__;
 }
 
-//mrpt::poses::CPose3D imu_broadcaster::convert_to_3dpose() 
-//{
-//    std::pair<quaternion, vector> pose = read();
-//    return mrpt::poses::CPose3D(mrpt::math::CQuaternionDouble((double)pose.first.w(),
-//                                                             (double)pose.first.x(),
-//                                                             (double)pose.first.y(),
-//                                                             (double)pose.first.z()),
-//                                pose.second(0),
-//                                pose.second(1),
-//                                pose.second(2));
-//}
-
-vector imu_broadcaster::get_velocity()
+vector imu_broadcaster::dc_block_filter(
+                                         vector R,
+                                         vector raw_data,
+                                         vector previous_raw_data,
+                                         vector previous_filtered_data
+                                       )
 {
-    return previous_velocity__;
+    //vector filtered_data = raw_data - previous_raw_data + R.cross(previous_filtered_data)
+    return vector(raw_data[0] - previous_raw_data[0] + R[0] * previous_filtered_data[0],
+                  raw_data[1] - previous_raw_data[1] + R[1] * previous_filtered_data[1],
+                  raw_data[2] - previous_raw_data[2] + R[2] * previous_filtered_data[2]);
 }
 
+mrpt::poses::CPose3D imu_broadcaster::convert_to_3dpose(   
+                                                         vector position,
+                                                         quaternion rotation 
+                                                        ) 
+{
+    return mrpt::poses::CPose3D(mrpt::math::CQuaternionDouble((double)rotation.w(),
+                                                             (double)rotation.x(),
+                                                             (double)rotation.y(),
+                                                             (double)rotation.z()),
+                                position(0),
+                                position(1),
+                                position(2));
+}

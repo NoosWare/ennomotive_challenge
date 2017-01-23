@@ -19,32 +19,39 @@ public:
     /// construct
     imu_broadcaster();
 
-    /// @return quaternion and velocity
-    void read(const std::shared_ptr<mrpt::slam::CObservationIMU> obs);
+        /// @brief save raw data
+    std::tuple<vector, vector, vector, quaternion> read();
 
-    /// @brief broadcast TF of the robot
-    void make_velocity(vector acceleration);
-
-    /// @brief get latest position stimation
-    vector get_velocity();
-
-    /// @brief convert to CPose3D
-    //mrpt::poses::CPose3D convert_to_3dpose();
-
-    ///
+    /// @brief convert data to 3DPose
+    mrpt::poses::CPose3D convert_to_3dpose( 
+                                            vector acceleration,
+                                            quaternion rotation 
+                                          ); 
+    
 protected: 
 
     // ETA in ms
     unsigned int millis();
 
+    /// @brief broadcast TF of the robot
+    vector make_velocity(vector acceleration);
+
     // calculate the quaternion using the magnetometer and angular velocity
-    void consume(
-                    quaternion & rotation, 
-                    float dt, 
-                    const vector & angular_velocity,
-                    const vector & acceleration, 
-                    const vector & magnetic_field
-                 );
+    void to_quaternion(
+                        quaternion & rotation, 
+                        float dt, 
+                        const vector & angular_velocity,
+                        const vector & acceleration, 
+                        const vector & magnetic_field
+                     );
+
+    /// filter 
+    vector dc_block_filter(
+                           vector R,
+                           vector raw_data,
+                           vector previous_raw_data,
+                           vector previous_filtered_data
+                         );
 
 private:
     ///Rotation
@@ -54,11 +61,14 @@ private:
     ///seconds
     unsigned int start__ = 0;
     ///Previous velocity
-    vector previous_velocity__;
+    vector velocity__;
     ///Previous position
-    vector previous_position__;
+    vector position__;
     ///delta time
     float dt__ = 0.0f;
-
+    /// previous raw accel
+    vector prev_raw_accel__;
+    /// previous filtered accel
+    vector prev_filt_accel__;
 };
 #endif

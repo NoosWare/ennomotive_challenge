@@ -50,15 +50,25 @@ include_directories(
                       ${catkin_INCLUDE_DIRS}
                    )
 ## Declare a C++ executable
- add_executable(mrpt_slam_node src/slam_node.cpp
+# add_executable(mrpt_slam_node src/slam_node.cpp
+#                               src/imu/I2CBus.cpp
+#                               src/imu/L3G.cpp
+#                               src/imu/LSM303.cpp
+#                               src/imu/MinIMU9.cpp
+#                               src/imu/MinIMU9.cpp
+#                               src/imu/imu_broadcaster.cpp
+#                               src/lidar.cpp
+#               )
+
+ add_executable(mrpt_slam_node src/imu_data.cpp
                                src/imu/I2CBus.cpp
                                src/imu/L3G.cpp
                                src/imu/LSM303.cpp
                                src/imu/MinIMU9.cpp
                                src/imu/MinIMU9.cpp
                                src/imu/imu_broadcaster.cpp
-                               src/lidar.cpp
                )
+
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(mrpt_slam_node ${catkin_LIBRARIES}
