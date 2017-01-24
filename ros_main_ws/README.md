@@ -16,6 +16,13 @@ View active topic by:
 rostopic list
 ```
 
+# Speed
+
+The current configuration makes the PiBorg move 1 meter per 3 seconds,
+or alternatively, 0.33 meters per second.
+Because the loop is on 10Hz (100ms) the max speed is 33 millimeters (0.033m) per 100 milliseconds.
+The published values in the topic are seconds per meter (3 to -3) therefore.
+
 # Using the joystick to control the robot:
 
 ```
