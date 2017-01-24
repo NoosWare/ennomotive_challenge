@@ -17,7 +17,7 @@ imu_broadcaster::imu_broadcaster()
     prev_filt_accel__ = vector(0.0, 0.0, 0.0);// vector(-0.0040875, 0.00171853, 0.00699055);
 }
 
-std::tuple<vector, vector, vector, quaternion> imu_broadcaster::read()
+vector imu_broadcaster::read()
 {
     int last_start = start__;
     start__ = millis();
@@ -42,9 +42,7 @@ std::tuple<vector, vector, vector, quaternion> imu_broadcaster::read()
     prev_raw_accel__ = acceleration;
 
     to_quaternion(rotation__, dt__, angular_velocity, filtered, magnetic_field);
-    auto position = calculate_position(filtered);
-
-    return std::make_tuple(acceleration, filtered, position, rotation__);
+    return calculate_euler(rotation__);
 }
 
 unsigned int imu_broadcaster::millis()
@@ -80,12 +78,17 @@ void imu_broadcaster::to_quaternion(
     ///
 }
 
-vector imu_broadcaster::calculate_position(vector acceleration)
+//vector imu_broadcaster::calculate_position(vector acceleration)
+//{
+//    velocity__ = velocity__ + (acceleration * dt__);
+//    position__ = position__ + (velocity__ * dt__) + ((acceleration * (dt__ * dt__)) / 2.0f);
+//    //position__ = position__ + ((acceleration * (dt__ * dt__)) / 2.0f);
+//    return position__;
+//}
+
+vector imu_broadcaster::calculate_euler(const quaternion rotation)
 {
-    velocity__ = velocity__ + (acceleration * dt__);
-    position__ = position__ + (velocity__ * dt__) + ((acceleration * (dt__ * dt__)) / 2.0f);
-    //position__ = position__ + ((acceleration * (dt__ * dt__)) / 2.0f);
-    return position__;
+    return (vector)(rotation.toRotationMatrix().eulerAngles(2, 1, 0) * (180 / M_PI));
 }
 
 vector imu_broadcaster::dc_block_filter(

@@ -61,6 +61,7 @@ include_directories(
 #               )
 
  add_executable(mrpt_slam_node src/slam_node.cpp
+                               src/slammer.cpp
                                src/imu/I2CBus.cpp
                                src/imu/L3G.cpp
                                src/imu/LSM303.cpp
