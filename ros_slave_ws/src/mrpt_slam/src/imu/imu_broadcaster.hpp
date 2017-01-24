@@ -19,7 +19,7 @@ public:
     /// construct
     imu_broadcaster();
 
-        /// @brief save raw data
+    /// @brief save raw data
     std::tuple<vector, vector, vector, quaternion> read();
 
     /// @brief convert data to 3DPose
@@ -34,7 +34,7 @@ protected:
     unsigned int millis();
 
     /// @brief broadcast TF of the robot
-    vector make_velocity(vector acceleration);
+    vector calculate_position(vector acceleration);
 
     // calculate the quaternion using the magnetometer and angular velocity
     void to_quaternion(

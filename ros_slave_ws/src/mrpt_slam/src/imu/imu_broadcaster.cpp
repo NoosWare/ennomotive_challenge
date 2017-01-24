@@ -13,7 +13,7 @@ imu_broadcaster::imu_broadcaster()
     quaternion rotation__ = quaternion::Identity();
     velocity__ = vector(0.0, 0.0, 0.0);
     position__ = vector(0.0, 0.0, 0.0);
-    prev_raw_accel__ = vector(0.0, 0.0, 1.0);// vector(-0.0122, -0.03538, 1.05359);
+    prev_raw_accel__ = vector(0.0, 0.0, 0.0);// vector(-0.0122, -0.03538, 1.05359);
     prev_filt_accel__ = vector(0.0, 0.0, 0.0);// vector(-0.0040875, 0.00171853, 0.00699055);
 }
 
@@ -32,7 +32,8 @@ std::tuple<vector, vector, vector, quaternion> imu_broadcaster::read()
     vector magnetic_field = imu__.readMag();
 
     vector acceleration = imu__.readAcc();
-    // linear acceleration => accelelerometer
+    acceleration[2] -= 0.98f;
+    //The position of the sensor is inverted (gravity has to be negative)
     vector filtered = dc_block_filter(vector(0.999, 0.999, 0.999), 
                                       acceleration,
                                       prev_raw_accel__,
@@ -41,7 +42,7 @@ std::tuple<vector, vector, vector, quaternion> imu_broadcaster::read()
     prev_raw_accel__ = acceleration;
 
     to_quaternion(rotation__, dt__, angular_velocity, filtered, magnetic_field);
-    auto position = make_velocity(filtered);
+    auto position = calculate_position(filtered);
 
     return std::make_tuple(acceleration, filtered, position, rotation__);
 }
@@ -79,11 +80,11 @@ void imu_broadcaster::to_quaternion(
     ///
 }
 
-vector imu_broadcaster::make_velocity(vector acceleration)
+vector imu_broadcaster::calculate_position(vector acceleration)
 {
     velocity__ = velocity__ + (acceleration * dt__);
-    //position__ = position__ + (velocity__ * dt__);
-    position__ = position__ + ((acceleration * (dt__ * dt__)) / 2.0f);
+    position__ = position__ + (velocity__ * dt__) + ((acceleration * (dt__ * dt__)) / 2.0f);
+    //position__ = position__ + ((acceleration * (dt__ * dt__)) / 2.0f);
     return position__;
 }
 

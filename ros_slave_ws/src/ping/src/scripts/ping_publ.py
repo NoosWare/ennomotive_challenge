@@ -22,20 +22,21 @@ def ReadDistance(pin):
    GPIO.setup(pin, GPIO.IN)
 
    while GPIO.input(pin)==0:
-      starttime=time.time()
+      starttime = time.time()
 
    while GPIO.input(pin)==1:
-      endtime=time.time()
+      endtime = time.time()
       
-   duration=endtime-starttime
+   duration = endtime - starttime
    # Distance is defined as time/2 (there and back) * speed of sound 34000 cm/s 
-   distance=duration*34000/2
+   distance = duration * 34000 / 2
    return distance
 
 # Publish value sensor
 def ping_distance():
-    pub = rospy.Publisher('ping_publisher', String, queue_size=10)
-    rospy.init_node('ping', anonymous=True)
+
+    rospy.init_node('ping_pub', anonymous=True)
+    pub = rospy.Publisher('ping', String, queue_size=100)
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         distance = ReadDistance(11)
