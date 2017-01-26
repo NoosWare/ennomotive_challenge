@@ -76,6 +76,11 @@ int main(int argc, char **argv)
     ros::Rate loop_rate(10);
     cv::Mat image;
 
+    // load a traffic light model
+    //cv::Mat tfl = ...
+    //auto tfl_orb = cv_detect::orb();
+    // find if traffic light is present?
+
     //while (ros::ok()) {
         camera.grab();
         camera.retrieve(image);

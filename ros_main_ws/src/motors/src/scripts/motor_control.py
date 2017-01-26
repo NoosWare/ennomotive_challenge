@@ -11,6 +11,7 @@ import sys
 import pygame
 import os
 import bluetooth
+
  
 # Setup the PicoBorg Reverse
 PBR = PicoBorgRev.PicoBorgRev()
@@ -40,6 +41,7 @@ testMode = False                        # True to run the motion tests, False to
 voltageIn = 12.0                        # Total battery voltage to the PicoBorg Reverse
 voltageOut = 6.0                        # Maximum motor voltage
  
+
 # Setup the power limits
 if voltageOut > voltageIn:
     maxPower = 1.0
@@ -49,14 +51,13 @@ else:
 
 #---------Functions------------
 # Function to perform a general movement
-def PerformMove(driveLeft, driveRight, numSeconds):
+def PerformMove(driveLeft, driveRight, numSeconds, maxPower):
+    #print('maxPower %s' % (maxPower))
     # Set the motors running
     PBR.SetMotor1(driveRight * maxPower)
     PBR.SetMotor2(-driveLeft * maxPower)
     # Wait for the time
     time.sleep(numSeconds)
-    # Turn the motors off
-    #PBR.MotorsOff()
  
 # Function to spin an angle in degrees
 def PerformSpin(angle):

@@ -28,28 +28,44 @@ std_msgs::String normalise_scale(
                                 )
 {
     // normalize between 0 and 1
-    float left, right = 0.f;
-    // invert if needed and scale back to (-3 ~ 0) or (0 ~ 3)
+    float left = 0.f;
+    float right = 0.f;
+    
+    // invert if needed and scale back to (-1 ~ 0) or (0 ~ 1)
     if (left_value > 0) {
-        left = -(left_value / 32767.f) * 3.f;
+        left = -(left_value / 32767.f) * 1.f;
     }
     else if (left_value < 0) {
-        left = -(left_value / -32767.f) * -3.f;
+        left = -(left_value / -32767.f) * -1.f;
     }
+
     // right value
     if (right_value > 0) {
-        right = -(right_value / 32767.f) * 3.f;
+        right = -(right_value / 32767.f) * 1.f;
     }
     else if (right_value < 0){
-        right = -(right_value / -32767.f) * -3.f;
+        right = -(right_value / -32767.f) * -1.f;
     }
+
     std_msgs::String msg;
     std::stringstream ss;
-    ss << "{\"left_speed\":" << left
-       << ", \"right_speed\":" << right
-       << "}";
-    msg.data = ss.str();
-    return msg;
+
+    if ((right >= -1 && right <= 1) &&
+        (left >= -1 && left <= 1))
+    {
+       ss << "{\"left_speed\":" << left
+          << ", \"right_speed\":" << right
+          << "}";
+        msg.data = ss.str();
+        return msg;
+    }
+    else {
+        ss << "{\"left_speed\":" << 0.f
+          << ", \"right_speed\":" << 0.f
+          << "}";
+        msg.data = ss.str();
+        return msg;
+    }
 }
 
 // sample multiple events and filter the ones we care about
@@ -101,7 +117,7 @@ int main(int argc, char** argv)
     // setup ROS node
     ros::init(argc, argv, "joystick_node");
     ros::NodeHandle n;
-    ros::Publisher pub = n.advertise<std_msgs::String>("motors_controller", 1000);
+    ros::Publisher pub = n.advertise<std_msgs::String>("motors", 1000);
 
     // 10Hz = 100ms
     ros::Rate loop_rate(10);

@@ -88,3 +88,56 @@ std::vector<cv_detect::hough_line> cv_detect::find_lines(const cv::Mat & image)
     }
     return result;
 }
+
+
+cv_detect::orb::orb(const cv::Mat & model)
+: orb__(cv::ORB::create(500,1.2 ,8 , 31,0, 2, cv::ORB::FAST_SCORE, 31)),
+  model__(model)
+{ 
+    cv::Mat gray = cv::Mat(model__.size(), CV_8UC1);
+    cv::cvtColor(model__, gray, cv::COLOR_RGB2GRAY);
+    orb__->detect(gray, model_keys__, model_desc__);
+}
+
+cv::Mat cv_detect::orb::find_features(const cv::Mat & image)
+{
+    std::vector<cv::KeyPoint> frame_keys;
+    cv::Mat frame_desc;
+
+    cv::Mat gray = cv::Mat(image.size(), CV_8UC1);
+    cv::cvtColor(image, gray, cv::COLOR_RGB2GRAY);
+    orb__->detect(gray, frame_keys, frame_desc);
+
+    cv::BFMatcher matcher(cv::NORM_HAMMING);
+    std::vector<cv::DMatch> matches;
+    matcher.match(model_desc__, frame_desc, matches);
+
+    std::vector<cv::Point2f> model_points, frame_points;
+    for (int i = 0; i < matches.size(); i++) {
+        model_points.push_back(model_keys__[matches[i].queryIdx].pt);
+        frame_points.push_back(frame_keys[matches[i].trainIdx].pt);
+    }
+
+    cv::Matx33f H = cv::findHomography(model_points, frame_points, CV_RANSAC);
+
+    std::vector<cv::Point> model_border, frame_border;
+    model_border.push_back(cv::Point(0, 0));
+    model_border.push_back(cv::Point(0, model__.rows));
+    model_border.push_back(cv::Point(model__.cols, model__.rows));
+    model_border.push_back(cv::Point(model__.cols, 0));
+
+    for (size_t i = 0; i < model_border.size(); i++) {
+        cv::Vec3f p = H * cv::Vec3f(model_border[i].x, model_border[i].y, 1);
+        frame_border.push_back(cv::Point(p[0] / p[2], p[1] / p[2]));
+    }
+
+    cv::polylines(image, frame_border, true, CV_RGB(0, 255, 0));
+
+    cv::Mat img_matches;
+    cv::drawMatches(model__, model_keys__, 
+                    image, frame_keys,
+                    matches, 
+                    img_matches);
+
+    return img_matches;
+}
