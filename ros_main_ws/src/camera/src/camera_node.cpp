@@ -13,6 +13,18 @@
 #include "std_msgs/String.h"
 #include "object_detect.hpp"
 
+void publish(
+                 ros::Publisher & pub,
+                 std::string json
+            )
+{
+    std_msgs::String msg;
+    std::stringstream ss;
+    ss << json;
+    msg.data = ss.str();
+    pub.publish(msg);
+}
+
 namespace po = boost::program_options;
 /**
  * @brief we use varargs to control :
@@ -72,43 +84,70 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "cvision");
     ros::NodeHandle n;
-    auto pub = n.advertise<std_msgs::String>("cvision", 1000);
-    ros::Rate loop_rate(10);
+
+    auto qr_pub = n.advertise<std_msgs::String>("qr", 10);
+    auto px_pub = n.advertise<std_msgs::String>("contours", 10);
+    auto hg_pub = n.advertise<std_msgs::String>("lines", 10);
+
+    ros::Rate loop_rate(5);
     cv::Mat image;
 
-    // load a traffic light model
-    //cv::Mat tfl = ...
-    //auto tfl_orb = cv_detect::orb();
-    // find if traffic light is present?
+    /*
+    cv::Mat model = cv::imread("traffic_light.png", CV_LOAD_IMAGE_COLOR);
+    auto orb = cv_detect::orb(model);
+    */
+    auto qr = cv_detect::qr();
+    cv::Mat result;
 
     //while (ros::ok()) {
         camera.grab();
         camera.retrieve(image);
+        // convert to grayscale now
+        cv::Mat gray = cv::Mat(image.size(), CV_8UC1);
+        cv::cvtColor(image, gray, CV_BGR2GRAY);
 
-        double t = (double)cv::getTickCount();
-        int pixels;
-        std::vector<cv_detect::hough_line> lines;
+        double t = (double)cv::getTickCount(); 
 
-        std::thread thread_a([&]() {
-            pixels = cv_detect::contour_pixels(image);
+        /// detect contours and count their pixels (grayscale)
+        std::thread thread_contours([&]() {
+            std::string pixels = cv_detect::contour_pixels(gray);
+            publish(px_pub, pixels);
         });
-        std::thread thread_b([&]() {
-            lines = cv_detect::find_lines(image); 
+
+        /// detect hough lines and find their angles (coloured)
+        std::thread thread_lines([&]() {
+            std::string lines = cv_detect::find_lines(image);
+            if (!lines.empty()) {
+                publish(hg_pub, lines);
+            }
         });
 
-        thread_a.join();
-        thread_b.join();        
+        /// scan for QR codes (grayscale)
+        std::thread thread_qr([&]() {
+            std::string json = qr.scan(gray);
+            if (!json.empty()) {
+                publish(qr_pub, json);
+            }
+        });
+
+        /// scan for circles (red threshold)
+        std::thread thread_circle([&]() {
+            result = cv_detect::find_red_circle(image, gray);
+        });
+
         t = (double)cv::getTickCount() - t;
         printf("eta = %gms\n", t*1000./cv::getTickFrequency());
-        std::cout << "pixesl: " << pixels << std::endl;
+
+        thread_contours.join();
+        thread_lines.join();
+        thread_qr.join();
+        thread_circle.join();
 
         //ros::spinOnce();
         //loop_rate.sleep();
     //}
-
-    //cv::imwrite("image.png", image);
-    //cv::imwrite("lines.png", lines);
-
+    // save ORB for TFL test
+    cv::imwrite("circle.png", result);
     camera.release();
     return 0;
 }

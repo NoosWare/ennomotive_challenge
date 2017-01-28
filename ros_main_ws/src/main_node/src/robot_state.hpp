@@ -59,6 +59,10 @@ public:
                                       1000, 
                                       &state_factory::read_ping,
                                       this);
+        imu_sub__  = node.subscribe("imu", 
+                                     100, 
+                                     &state_factory::read_imu,
+                                     this);
     }
 
     /// parse JSON of {"x":.., "y":..., "thetha":...}
@@ -79,6 +83,7 @@ public:
     /// @brief read IMU values from topic `imu`
     void read_imu(const std_msgs::String::ConstPtr & msg)
     {
+        ROS_INFO("%s", msg->data.c_str());
         /// parse JSON of {"acceleration": {"x":..., "y":..., "z":...},
         ///                "euler": {"yaw":..., "pitch":..., "roll":...}}
     }
