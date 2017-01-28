@@ -8,22 +8,37 @@
  */
 namespace cv_detect
 {
-    typedef std::tuple<int,int,float,float> hough_line;
 
-    cv::Mat region_of_interest(const cv::Mat & image);
+/// @brief do a min-max calculation (unsigned, e.g. 0~1)
+float min_max_unsigned(float value, float min, float max);
 
-    /// @brief obtain a matrix of contour points
-    int contour_pixels(const cv::Mat & image);
+/// @brief signed min-max calculation (e.g, -1 ~ +1)
+float min_max_signed(float value, float min, float max);
 
-    /// @brief obtain a list of lines
-    /// @return is a pair of (x, y, θ, μ)
-    /// where x,y is origin θ is angle and μ is size
-    std::vector<hough_line> find_lines(const cv::Mat & image);
 
-    /// @brief find ORB features
-    void orb_features(const cv::Mat & image, const cv::Mat & model);
+/// @brief mask ROI and return a cv::Mat of the trapezoid
+cv::Mat region_of_interest(const cv::Mat & image);
 
-/// @brief calss handler for ORB
+/// @brief obtain a min-max value of contour pixels in trapezoid ROI
+std::string contour_pixels(const cv::Mat & gray);
+
+/// @brief obtain a list of lines inside the frame
+/// @return json string
+/// @note: each line is made of (x, y, θ, μ)
+///        where x,y is origin θ is angle and μ is size
+/// @warning: all values are min-max normalised
+///
+std::string find_lines(const cv::Mat & image);
+
+/// @brief search for a red circle (traffic light)?
+cv::Mat find_red_circle(
+                        const cv::Mat & image,
+                        const cv::Mat & gray
+                       );
+
+/// @brief class handler for ORB
+/// @note  use for traffic light region detection
+///        and possibly for detecting ramps?
 class orb
 {
 public:
@@ -32,7 +47,10 @@ public:
     orb(const cv::Mat & model);
 
     /// find features in frame
-    cv::Mat find_features(const cv::Mat & image);
+    cv::Mat match(
+                    const cv::Mat & image,
+                    const cv::Mat & gray
+                 );
 
 private:
 
@@ -40,6 +58,18 @@ private:
     std::vector<cv::KeyPoint> model_keys__;
     cv::Mat model_desc__;
     cv::Mat model__;
+};
+
+/// @brief class handler for QR scanner
+class qr
+{
+public:
+    qr(); 
+
+    std::string scan(const cv::Mat & gray);
+    
+private:
+    zbar::ImageScanner scanner__;
 };
 
 }
