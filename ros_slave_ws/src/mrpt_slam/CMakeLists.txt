@@ -17,10 +17,11 @@ find_package(MRPT REQUIRED  base
                             slam
                             maps
                             hwdrivers
+                            reactivenav
 )
 
 # Rplidar drivers
-find_library(RPLIDAR_LIBRARY NAMES rplidar_sdk HINTS /usr/local/lib)
+#find_library(RPLIDAR_LIBRARY NAMES rplidar_sdk HINTS /usr/local/lib)
 
 ###################################
 ## catkin specific configuration ##
@@ -39,6 +40,7 @@ catkin_package(
 )
 
 add_definitions(-std=c++1y)
+set(CMAKE_CXX_FLAGS "-Ofast")
 ###########
 ## Build ##
 ###########
@@ -62,8 +64,9 @@ include_directories(
 
  add_executable(mrpt_slam_node src/slam_node.cpp
                                src/slammer.cpp
+                               src/planner.cpp
+                               src/navigator.cpp
                )
-
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(mrpt_slam_node ${catkin_LIBRARIES}

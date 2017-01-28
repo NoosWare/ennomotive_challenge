@@ -40,8 +40,8 @@ def ping_distance():
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
         distance = ReadDistance(11)
-        json_data = { 'distance' : distance }
-        pub.publish(json.dumps(json_data))
+        print distance
+        pub.publish(str(distance))
         rate.sleep()
 
 if __name__ == '__main__':
