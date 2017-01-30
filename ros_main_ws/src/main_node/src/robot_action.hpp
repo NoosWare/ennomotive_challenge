@@ -16,6 +16,30 @@ enum class action_type
     stop  = 0
 };
 
+struct action_string
+{
+    std::string operator()(const action_type action)
+    {
+        switch (action) {
+            case action_type::forward: {
+                return "forward";        
+            } break;
+            case action_type::backward: {
+                return "backward";        
+            } break;
+            case action_type::left: {
+                return "left";
+            } break;
+            case action_type::right: {
+                return "right";
+            } break;
+            case action_type::stop: {
+                return "stop";
+            } break;
+        }
+    }
+};
+
 /**
  * @brief interpret an action to motor commands (json)
  * @version 0.1.0
@@ -34,16 +58,36 @@ struct action_interpreter
                 j = {{"left_speed", -1}, {"right_speed", -1}};
             } break;
             case action_type::left: {
-                j = {{"left_speed", 1}, {"right_speed", -1}};
+                j = {{"left_speed", -1}, {"right_speed", 1}};
             } break;
             case action_type::right: {
-                j = {{"left_speed", -1}, {"right_speed", 1}};
+                j = {{"left_speed", 1}, {"right_speed", -1}};
             } break;
             case action_type::stop: {
                 j = {{"left_speed", 0}, {"right_speed", 0}};
             } break;
         }
         return j.dump(); 
+    }
+};
+
+struct action_bias
+{
+    float operator()(const action_type action)
+    {
+        if (action == action_type::forward) {
+            return 1.0;  // 70%
+        }
+        else if (action == action_type::backward) {
+            return 0.02; // 2%
+        }
+        else if (action == action_type::left) {
+            return 0.14; // 14%
+        }
+        else if (action == action_type::right) {
+            return 0.14; // 14%
+        }
+        return 0.;
     }
 };
 
@@ -59,7 +103,7 @@ public:
 
     robot_action() = delete;
 
-    robot_action(const robot_action &) = default;
+    robot_action(const robot_action &) = delete;
 
     robot_action(const ros::Publisher & publisher, action_type arg)
     : pub__(publisher), move(arg)
@@ -71,7 +115,7 @@ public:
     }
 
     /// @brief run this action (e.g., command motors)
-    void run() const
+    void run()
     {
         std::string json = action_interpreter()(move);
         std_msgs::String msg;

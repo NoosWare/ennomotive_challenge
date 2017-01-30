@@ -34,7 +34,8 @@ struct robot_state
     /// print on stdout
     void print() const
     {
-        printf("x: %f y: %f, θ: %f ping %f\r\n", x, y, theta, ping);
+        //printf("x: %f y: %f, θ: %f ping %f\r\n", x, y, theta, ping);
+        printf("x: %f y: %f, θ: %f \r\n", x, y, theta);
     }
 };
 
@@ -55,6 +56,7 @@ public:
                                       &state_factory::read_coordinates, 
                                       this
                                     );
+        /*
         ping_sub__  = node.subscribe("ping", 
                                       1000, 
                                       &state_factory::read_ping,
@@ -63,6 +65,7 @@ public:
                                      100, 
                                      &state_factory::read_imu,
                                      this);
+        */
     }
 
     /// parse JSON of {"x":.., "y":..., "thetha":...}

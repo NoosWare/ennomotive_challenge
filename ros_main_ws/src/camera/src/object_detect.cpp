@@ -1,4 +1,5 @@
 #include "object_detect.hpp"
+#include "index.hpp"
 
 float cv_detect::min_max_unsigned(float value, float min, float max)
 {
@@ -62,6 +63,8 @@ std::string cv_detect::contour_pixels(const cv::Mat & gray)
 
 std::string cv_detect::find_lines(const cv::Mat & image)
 {
+    
+    cv::Mat copy(image);
     cv::Mat img;
     cv::Mat found;
     cv::Canny(image, img, 50, 200, 3);
@@ -74,6 +77,7 @@ std::string cv_detect::find_lines(const cv::Mat & image)
     // max # of gap points inside a line = 5
     cv::HoughLinesP(img, lines, 1, CV_PI/180, 50, 80, 5);
     nlohmann::json j;
+    std::vector<std::tuple<int, int, float, float>> data;
 
     for (std::size_t i = 0; i < lines.size(); i++) {
         cv::Vec4i l = lines[i];
@@ -82,10 +86,13 @@ std::string cv_detect::find_lines(const cv::Mat & image)
             continue;
         }
         // draw lines on `found` if needed
+        cv::line(copy, cv::Point(l[0],l[1]), cv::Point(l[2],l[3]), cv::Scalar(255, 255, 0), 3, 0);
+
         // calculate for each line, its magnitude and angle
         float dx = l[2] - l[0];
         float dy = l[3] - l[1];
         float theta = atan(dy/dx) * 180.f / M_PI;
+
         // calculate size of line
         float length = std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
         if (theta != 0 && length != 0) {
@@ -93,8 +100,28 @@ std::string cv_detect::find_lines(const cv::Mat & image)
                          {"y", min_max_unsigned(l[1], 0, image.rows)},
                          {"yaw", min_max_signed(theta, -180, 180)},
                          {"size", min_max_unsigned(length, 0, image.cols)}});
+
+            // training data
+            data.push_back(std::make_tuple(min_max_unsigned(l[0], 0, image.cols),
+                                           min_max_unsigned(l[1], 0, image.rows),
+                                           min_max_signed(theta, -180, 180),
+                                           min_max_unsigned(length, 0, image.cols)));
         }
     }
+
+    // 
+    std::string uid = index_lines(copy);
+    std::ofstream ofs;
+    ofs.open ("lines.dat", std::ofstream::out | std::ofstream::app);
+    ofs << uid;
+    for (const auto & entry : data) {
+        ofs << " " << std::get<0>(entry) << " " << std::get<1>(entry) 
+        << " " << std::get<2>(entry) << " " << std::get<3>(entry);
+    }
+    ofs << std::endl;
+    ofs.close();
+    // 
+
     return j.dump();
 }
 
@@ -164,12 +191,12 @@ cv::Mat cv_detect::orb::match(
     return img_matches;
 }
 
-cv_detect::qr::qr()
+cv_detect::qr_scan::qr_scan()
 {
     scanner__.set_config(zbar::ZBAR_NONE, zbar::ZBAR_CFG_ENABLE, 1);
 }
 
-std::string cv_detect::qr::scan(const cv::Mat & gray)
+std::vector<cv_detect::qr> cv_detect::qr_scan::scan(const cv::Mat & gray)
 {
     int width = gray.cols;
     int height = gray.rows;
@@ -177,23 +204,22 @@ std::string cv_detect::qr::scan(const cv::Mat & gray)
     zbar::Image frame(width, height, "Y800", raw, width * height);
     scanner__.scan(frame);
 
-    nlohmann::json j;
+    std::vector<qr> qrs;
     for (zbar::Image::SymbolIterator symbol = frame.symbol_begin(); 
          symbol != frame.symbol_end(); 
          ++symbol)
     {
-        j.push_back({{"data", symbol->get_data()}, 
-                                { "coordinates", {
-                                         {"top_right", {{"x", symbol->get_location_x(0)},
-                                                        {"y", symbol->get_location_y(0)}}},
-                                         {"top_left", {{"x", symbol->get_location_x(1)},
-                                                       {"y", symbol->get_location_y(1)}}},
-                                         {"bot_left", {{"x", symbol->get_location_x(2)},
-                                                       {"y", symbol->get_location_y(2)}}},
-                                         {"bot_right", {{"x", symbol->get_location_x(3)},
-                                                        {"y", symbol->get_location_y(3)}}}
-                               }}
-                  });
+        qr item;
+        item.data = symbol->get_data();
+        item.top_right.x = symbol->get_location_x(0);
+        item.top_right.y = symbol->get_location_y(0);
+        item.top_left.x = symbol->get_location_x(1);
+        item.top_left.y= symbol->get_location_y(1);
+        item.bot_left.x  = symbol->get_location_x(2);
+        item.bot_left.y  = symbol->get_location_y(2);
+        item.bot_right.x = symbol->get_location_x(3);
+        item.bot_right.y = symbol->get_location_y(3);
+        qrs.push_back(item);
     }
-    return j.dump();
+    return qrs;
 }

@@ -12,6 +12,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "object_detect.hpp"
+#include "vision_processing.hpp"
 
 void publish(
                  ros::Publisher & pub,
@@ -96,8 +97,7 @@ int main(int argc, char **argv)
     cv::Mat model = cv::imread("traffic_light.png", CV_LOAD_IMAGE_COLOR);
     auto orb = cv_detect::orb(model);
     */
-    auto qr = cv_detect::qr();
-    cv::Mat result;
+    auto qrscan = cv_detect::qr_scan();
 
     //while (ros::ok()) {
         camera.grab();
@@ -108,13 +108,13 @@ int main(int argc, char **argv)
 
         double t = (double)cv::getTickCount(); 
 
-        /// detect contours and count their pixels (grayscale)
+        /*
         std::thread thread_contours([&]() {
             std::string pixels = cv_detect::contour_pixels(gray);
             publish(px_pub, pixels);
         });
+        */
 
-        /// detect hough lines and find their angles (coloured)
         std::thread thread_lines([&]() {
             std::string lines = cv_detect::find_lines(image);
             if (!lines.empty()) {
@@ -124,30 +124,30 @@ int main(int argc, char **argv)
 
         /// scan for QR codes (grayscale)
         std::thread thread_qr([&]() {
-            std::string json = qr.scan(gray);
-            if (!json.empty()) {
-                publish(qr_pub, json);
+            std::vector<cv_detect::qr> qrs = qrscan.scan(gray);
+            if (!qrs.empty()) {
+                auto qrfinder = qr_hunter(qrs);
+                publish(qr_pub, qrfinder.relative_position());
             }
         });
 
-        /// scan for circles (red threshold)
+        /*
         std::thread thread_circle([&]() {
             result = cv_detect::find_red_circle(image, gray);
         });
+        */
 
         t = (double)cv::getTickCount() - t;
         printf("eta = %gms\n", t*1000./cv::getTickFrequency());
 
-        thread_contours.join();
+        //thread_contours.join();
         thread_lines.join();
         thread_qr.join();
-        thread_circle.join();
+        //thread_circle.join();
 
         //ros::spinOnce();
         //loop_rate.sleep();
     //}
-    // save ORB for TFL test
-    cv::imwrite("circle.png", result);
-    camera.release();
+        camera.release();
     return 0;
 }

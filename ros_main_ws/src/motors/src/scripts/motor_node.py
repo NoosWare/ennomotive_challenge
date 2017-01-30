@@ -22,7 +22,7 @@ print('voltage in: %s' % (voltageIn))
 
 def callback(data):
     speed = json.loads(data.data)
-    #print speed
+    print speed
     speed_r = float(speed['right_speed'])
     speed_l = float(speed['left_speed'])
 

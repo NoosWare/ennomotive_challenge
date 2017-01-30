@@ -17,7 +17,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} /usr/local/lib/cmake)
 find_package(raspicam REQUIRED)
 
 add_executable(camera_node src/camera_node.cpp
-                           src/object_detect.cpp)
+                           src/object_detect.cpp
+                           src/index.cpp)
+
 set(CMAKE_CXX_FLAGS "-Ofast")
 target_link_libraries(camera_node ${catkin_LIBRARIES} 
                                   ${raspicam_CV_LIBS} 

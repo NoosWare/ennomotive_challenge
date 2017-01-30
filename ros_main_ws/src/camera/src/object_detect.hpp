@@ -60,13 +60,29 @@ private:
     cv::Mat model__;
 };
 
+
+struct qr
+{
+    struct point
+    {
+        unsigned int x;
+        unsigned int y;
+    };
+
+    point top_left;
+    point top_right;
+    point bot_left;
+    point bot_right;
+    std::string data;
+};
+
 /// @brief class handler for QR scanner
-class qr
+class qr_scan
 {
 public:
-    qr(); 
+    qr_scan(); 
 
-    std::string scan(const cv::Mat & gray);
+    std::vector<qr> scan(const cv::Mat & gray);
     
 private:
     zbar::ImageScanner scanner__;

@@ -10,4 +10,8 @@
 #include <tuple>
 #include <math.h>
 
+#include "boost/date_time/posix_time/posix_time.hpp"
 #include "json.hpp"
+#include "ros/ros.h"
+#include <boost/lexical_cast.hpp>
+
