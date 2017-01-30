@@ -11,9 +11,11 @@
 #include "sensor_msgs/LaserScan.h"
 #include "json.hpp"
 #include <math.h>
+#include <cmath>
 #include "planner.hpp"
 #include "navigator.hpp"
 #include <functional>
+#include <numeric>
 
 #define RAD2DEG(x) ((x)*180./M_PI)
 #define M_PIf 3.14159265358979f
@@ -34,6 +36,13 @@ public:
 
     void get_pose();
 
+    void collision_angles( std::vector<float> lidar_angles);
+
+    void avg_distance(  std::vector<float> lidar_angles, 
+                            int counter,
+                            std::vector<char> valid_data
+                     );
+
 private:
 
     mrpt::slam::CMetricMapBuilderICP builder__;
@@ -47,7 +56,7 @@ private:
     mrpt::poses::CPose3D sensor__;
     mrpt::slam::COccupancyGridMap2D grid__;
 
-    ros::Publisher poser__;
+    ros::Publisher poser__, collision__, free_way__;
     
 };
 #endif

@@ -38,6 +38,7 @@ def ping_distance():
     rospy.init_node('ping_pub', anonymous=True)
     pub = rospy.Publisher('ping', String, queue_size=100)
     rate = rospy.Rate(10) # 10hz
+    print("Ping running...")
     while not rospy.is_shutdown():
         distance = ReadDistance(11)
         print distance
@@ -47,5 +48,7 @@ def ping_distance():
 if __name__ == '__main__':
     try:
         ping_distance()
+    except KeyboardInterrupt:
+        pass
     except rospy.ROSInterruptException:
         pass
