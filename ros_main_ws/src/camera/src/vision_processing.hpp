@@ -53,17 +53,33 @@ public:
     }   
 
     // TODO: determine distance by size of QR
+    float distance_to_qr()
+    {
+        corners = {cv::Point2f(qr.top_right.x, qr.top_right.y),
+                   cv::Point2f(qr.top_left.x, qr.top_left.y),
+                   cv::Point2f(qr.bot_right.x, qr.bot_right.y),
+                   cv::Point2f(qr.bot_left.x, qr.bot_left.y)};
+        float occupancy = cv::contourArea(corners) / image_area;
+        std::cout << occupancy << std::endl;
+        return occupancy;
+    }
+    
  
 private:
 
     std::string to_json()
     {
-        nlohmann::json j = {{"left", left}, {"right", right}, {"centre", centre}};
+        nlohmann::json j = {{"left", left}, 
+                            {"right", right}, 
+                            {"centre", centre}, 
+                            {"area", distance_to_qr()}};
         return j.dump();
     }
     
     cv_detect::qr qr;
     bool left, right, centre = false;
+    std::vector<cv::Point> corners;
+    double image_area = 640 * 480;
 };
 
 #endif
