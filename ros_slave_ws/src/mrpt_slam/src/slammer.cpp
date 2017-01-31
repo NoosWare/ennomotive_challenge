@@ -3,7 +3,7 @@
 slammer::slammer(ros::NodeHandle & node)
 : planner(), navigator(node), iniFile__("icp_config.ini")
 {
-    poser__ = node.advertise<std_msgs::String>("coordinates", 30);
+    poser__ = node.advertise<std_msgs::String>("coordinates", 100);
     collision__ = node.advertise<std_msgs::String>("collision", 100);
     free_way__ = node.advertise<std_msgs::String>("distance", 100);
 
@@ -14,6 +14,10 @@ slammer::slammer(ros::NodeHandle & node)
                                     0, 
                                     mrpt::utils::DEG2RAD(180)); // roll
 
+    if (grid__.loadFromBitmapFile("grid_map.png", 0.04)) {
+        std::cout << "loaded grid map" << std::endl;
+        loaded__ = true;
+    }
     builder__.options.verbose = false;
     builder__.ICP_options.loadFromConfigFile(iniFile__, "MappingApplication");
     builder__.ICP_params.loadFromConfigFile(iniFile__, "ICP");
@@ -53,27 +57,30 @@ void slammer::read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan)
     mrpt::poses::CPose3D robotpose;
     builder__.getCurrentPoseEstimation()->getMean(robotpose);
     auto pose = std::make_shared<mrpt::poses::CPose3D>(robotpose);
-    grid__.insertObservation(obs.get(), pose.get());
+
+    if (!loaded__) {
+        grid__.insertObservation(obs.get(), pose.get());
+    }
 
     // TODO: move loop out of here, this callbacle by a topic `planner`
-    //calculate_path();
+    //calculate_path(robotpose);
+    get_pose();
     //if ((ros::Time::now().toSec() - timer__) > 0.1) {
-    //    navigator::navigate(robotpose, obs->scan);
+    //navigator::navigate(robotpose, obs->scan);
     //    timer__ = ros::Time::now().toSec();
     //}
 
-
-    if ((ros::Time::now().toSec() - start__) > 10) {
-        std::cout << "saving map" << std::endl;
+    if ((ros::Time::now().toSec() - start__) > 30) {
         builder__.saveCurrentEstimationToImage("icp_map", true);
-        grid__.saveAsBitmapFile("grid_map.png");
+        if (!loaded__) {
+            grid__.saveAsBitmapFile("grid_map.png");
+        }
         start__ = ros::Time::now().toSec();
     }
 }
 
-void slammer::calculate_path()
+void slammer::calculate_path(mrpt::poses::CPose3D robotpose)
 {
-    mrpt::poses::CPose3D robotpose;
     planner::path_planner(grid__, robotpose);
 }
 
@@ -92,27 +99,27 @@ void slammer::get_pose()
 
 void slammer::collision_angles( std::vector<float> lidar_angles) 
 {
-    int front, l_front, r_front, l_back, r_back, back;
-    front = l_front = r_front = l_back = r_back = back = 0;
+    bool front, l_front, r_front, l_back, r_back, back;
+    front = l_front = r_front = l_back = r_back = back = false;
 
     for (const auto & angle : lidar_angles) {
         if (angle <= 30 || angle >= 330) {
-            front = 1;
+            front = true;
         }     
         else if (angle > 30 && angle <= 90) {
-            l_front = 1;
+            l_front = true;
         }
         else if (angle > 90 && angle <= 150) {
-            l_back = 1;
+            l_back = true;
         }
         else if (angle > 150 && angle <= 210) {
-            back = 1;
+            back = true;
         }
         else if (angle > 210 && angle <= 270) {
-            r_back = 1;
+            r_back = true;
         }
         else if (angle > 270 && angle < 330) {
-            r_front = 1;
+            r_front = true;
         }
     }
     std_msgs::String msg;
@@ -186,6 +193,6 @@ void slammer::avg_distance(
     msg.data = json.dump();
     free_way__.publish(msg);
 
-    std::cout << front_score << " " << right_score << " " << back_score << " " << left_score  << std::endl;
+    //std::cout << front_score << " " << right_score << " " << back_score << " " << left_score  << std::endl;
 
 }

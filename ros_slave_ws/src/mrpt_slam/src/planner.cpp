@@ -3,7 +3,7 @@
 planner::planner()
 : path_planner__()
 {
-    path_planner__.robotRadius = 0.25f;
+    path_planner__.robotRadius = 0.2f;
 }
 
 std::deque<mrpt::math::TPoint2D> planner::path_planner(
@@ -17,17 +17,12 @@ std::deque<mrpt::math::TPoint2D> planner::path_planner(
     std::cout << "computePath" << std::endl;
     path_planner__.computePath(map,
                                mrpt::poses::CPose2D(robotpose.x(), robotpose.y(), 0),
-                               mrpt::poses::CPose2D(-0.59, 0.53, 0),
+                               mrpt::poses::CPose2D(-1.51, 0.035, 0),
                                path,
                                path_found, 
-                               -1); //default
+                               5); //default
      
-    if (!path_found){
-        std::cout << " No path found " << std::endl;
-    }
-    else {
-        std::cout << "Path found with: " << path.size() << " steps" << std::endl;    
-    }
+        std::cout << "Path found " << path_found << " steps: "<< path.size() << " steps" << std::endl;    
     return path;
 }
 

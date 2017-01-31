@@ -32,7 +32,7 @@ public:
     // callback for laser data
     void read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan);
 
-    void calculate_path();
+    void calculate_path(mrpt::poses::CPose3D robotpose);
 
     void get_pose();
 
@@ -58,5 +58,6 @@ private:
 
     ros::Publisher poser__, collision__, free_way__;
     
+    bool loaded__ = false;
 };
 #endif
