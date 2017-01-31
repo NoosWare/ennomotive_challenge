@@ -17,25 +17,19 @@ struct robot_state
 {
     float x = 0;
     float y = 0;
-    float theta = 0;
-
-    //qr_info target;
-    //bool    traffic;
-    float ping = 0;
-    float R = 0;
+    float yaw = 0;
 
     bool operator==(const robot_state & arg) const
     {
         return (this->x == arg.x) && 
                (this->y == arg.y) &&
-               (this->theta == arg.theta);
+               (this->yaw == arg.yaw);
     }
 
     /// print on stdout
     void print() const
     {
-        //printf("x: %f y: %f, θ: %f ping %f\r\n", x, y, theta, ping);
-        printf("x: %f y: %f, θ: %f \r\n", x, y, theta);
+        printf("x: %f y: %f, θ: %f \r\n", x, y, yaw);
     }
 };
 
@@ -56,39 +50,15 @@ public:
                                       &state_factory::read_coordinates, 
                                       this
                                     );
-        /*
-        ping_sub__  = node.subscribe("ping", 
-                                      1000, 
-                                      &state_factory::read_ping,
-                                      this);
-        imu_sub__  = node.subscribe("imu", 
-                                     100, 
-                                     &state_factory::read_imu,
-                                     this);
-        */
     }
 
-    /// parse JSON of {"x":.., "y":..., "thetha":...}
+    /// parse JSON of {"x":.., "y":..., "yaw":...}
     void read_coordinates(const std_msgs::String::ConstPtr & msg)
     {
         auto obj = nlohmann::json::parse(msg->data);
         state__.x = obj["x"];
         state__.y = obj["y"];
-        state__.theta = obj["theta"];
-    }
-
-    /// @brief read ping values from topic `ping`
-    void read_ping(const std_msgs::String::ConstPtr & msg)
-    {
-        state__.ping =  boost::lexical_cast<float>(msg->data);
-    }
-
-    /// @brief read IMU values from topic `imu`
-    void read_imu(const std_msgs::String::ConstPtr & msg)
-    {
-        ROS_INFO("%s", msg->data.c_str());
-        /// parse JSON of {"acceleration": {"x":..., "y":..., "z":...},
-        ///                "euler": {"yaw":..., "pitch":..., "roll":...}}
+        state__.yaw = obj["theta"];
     }
 
     /// @brief get a copy of the state as it its ATM
@@ -113,7 +83,7 @@ template <> struct hash<robot_state>
         std::size_t seed = 0;
         relearn::hash_combine(seed, arg.x);
         relearn::hash_combine(seed, arg.y);
-        relearn::hash_combine(seed, arg.theta);
+        relearn::hash_combine(seed, arg.yaw);
         return seed;
     }
 };

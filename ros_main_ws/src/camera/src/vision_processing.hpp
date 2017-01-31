@@ -59,8 +59,8 @@ public:
                    cv::Point2f(qr.top_left.x, qr.top_left.y),
                    cv::Point2f(qr.bot_right.x, qr.bot_right.y),
                    cv::Point2f(qr.bot_left.x, qr.bot_left.y)};
-        float occupancy = cv::contourArea(corners) / image_area;
-        std::cout << occupancy << std::endl;
+        float occupancy = (cv::contourArea(corners) / image_area) * 100;
+        //std::cout << "area ocupada qr " << cv::contourArea(corners) << "imagen: " << image_area << " total " << occupancy << std::endl;
         return occupancy;
     }
     

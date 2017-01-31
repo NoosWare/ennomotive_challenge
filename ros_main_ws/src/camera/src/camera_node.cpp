@@ -89,17 +89,13 @@ int main(int argc, char **argv)
     auto qr_pub = n.advertise<std_msgs::String>("qr", 10);
     auto px_pub = n.advertise<std_msgs::String>("contours", 10);
     auto hg_pub = n.advertise<std_msgs::String>("lines", 10);
+    auto tf_pub = n.advertise<std_msgs::String>("circles", 10);
 
     ros::Rate loop_rate(5);
     cv::Mat image;
-
-    /*
-    cv::Mat model = cv::imread("traffic_light.png", CV_LOAD_IMAGE_COLOR);
-    auto orb = cv_detect::orb(model);
-    */
     auto qrscan = cv_detect::qr_scan();
 
-    //while (ros::ok()) {
+    while (ros::ok()) {
         camera.grab();
         camera.retrieve(image);
         // convert to grayscale now
@@ -108,21 +104,16 @@ int main(int argc, char **argv)
 
         double t = (double)cv::getTickCount(); 
 
-        /*
         std::thread thread_contours([&]() {
             std::string pixels = cv_detect::contour_pixels(gray);
             publish(px_pub, pixels);
         });
-        */
-
         std::thread thread_lines([&]() {
             std::string lines = cv_detect::find_lines(image);
             if (!lines.empty()) {
                 publish(hg_pub, lines);
             }
         });
-
-        /// scan for QR codes (grayscale)
         std::thread thread_qr([&]() {
             std::vector<cv_detect::qr> qrs = qrscan.scan(gray);
             if (!qrs.empty()) {
@@ -130,24 +121,24 @@ int main(int argc, char **argv)
                 publish(qr_pub, qrfinder.relative_position());
             }
         });
-
-        /*
         std::thread thread_circle([&]() {
-            result = cv_detect::find_red_circle(image, gray);
+            auto json = cv_detect::find_red_circle(image, gray);
+            if (!json.empty()){
+                publish(tf_pub, json);
+            }
         });
-        */
 
         t = (double)cv::getTickCount() - t;
-        printf("eta = %gms\n", t*1000./cv::getTickFrequency());
+        //printf("eta = %gms\n", t*1000./cv::getTickFrequency());
 
-        //thread_contours.join();
+        thread_contours.join();
         thread_lines.join();
         thread_qr.join();
-        //thread_circle.join();
+        thread_circle.join();
 
-        //ros::spinOnce();
-        //loop_rate.sleep();
-    //}
-        camera.release();
+        ros::spinOnce();
+        loop_rate.sleep();
+    }
+    camera.release();
     return 0;
 }

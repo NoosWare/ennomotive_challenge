@@ -15,7 +15,7 @@ public:
     navigation(ros::NodeHandle & node)
     {
         nav_sub__ = node.subscribe("navigation", 
-                                    1000, 
+                                    10, 
                                     &navigation::read_angle, 
                                     this
                                   );
@@ -33,14 +33,6 @@ public:
     {
         return fuzzy_angle(angle__);
     }
-
-    // @brief get all
-    std::vector<action_type> get_all() const
-    {}
-
-    // @brief get most frequent in the rolling window
-    action_type get_most_frequent() const
-    {}
 
 private:
 

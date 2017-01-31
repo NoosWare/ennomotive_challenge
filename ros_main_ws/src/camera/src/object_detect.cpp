@@ -76,7 +76,7 @@ std::string cv_detect::find_lines(const cv::Mat & image)
     // min # of points forming a line = 100
     // max # of gap points inside a line = 5
     cv::HoughLinesP(img, lines, 1, CV_PI/180, 50, 80, 5);
-    nlohmann::json j;
+    nlohmann::json j_array, j_result;
     //std::vector<std::tuple<int, int, float, float>> data;
     std::vector<cv_detect::line> data;
 
@@ -106,22 +106,30 @@ std::string cv_detect::find_lines(const cv::Mat & image)
             data.push_back(line_data);
         }
     }
-    ///sort larger lines
-    std::sort(data.begin(), data.end(), cv_detect::line);  
+    ///sort largest lines
+    cv_detect::line l_data;
+    std::sort(data.begin(), data.end(), l_data);
 
     //add to json
-    // j.push_back({{"x", min_max_unsigned(l[0], 0, image.cols)},
-    //              {"y", min_max_unsigned(l[1], 0, image.rows)},
-    //              {"yaw", min_max_signed(theta, -180, 180)},
-    //              {"size", min_max_unsigned(length, 0, image.cols)}});
+    int counter = 0;
+    for (const auto each_line : data) {
+        j_array.push_back({{"x", each_line.x},
+                           {"y", each_line.y},
+                           {"yaw", each_line.yaw},
+                           {"size", each_line.size}});
+        counter++;
+        if (counter > 4) {
+            break;
+        }
+    }
 
+    j_result = {{"lines", j_array}};
 
-
-    return j.dump();
+    return j_result.dump();
 }
 
 std::string cv_detect::find_red_circle(const cv::Mat & image,
-                                   const cv::Mat & gray)
+                                       const cv::Mat & gray)
 {
     cv::Mat blurred, colors;
     cv::GaussianBlur(gray, blurred, cv::Size(9, 9), 2, 2);
@@ -129,19 +137,20 @@ std::string cv_detect::find_red_circle(const cv::Mat & image,
     nlohmann::json j;
 
     cv::HoughCircles(blurred, circles, CV_HOUGH_GRADIENT, 1, 5, 50, 50, 0, 0);
-    std::cout << "circles: " << circles.size() << std::endl;
+    //std::cout << "circles: " << circles.size() << std::endl;
     for (std::size_t i = 0; i < circles.size(); i++) {
         // TODO: verify the color inside the circle (look at image, not blurred or grey)
-        cv::circle(blurred, cv::Point(circles[i][0], circles[i][1]), circles[i][2], cv::Scalar(0,255,0), 1, 0, 0);
+        //cv::circle(blurred, cv::Point(circles[i][0], circles[i][1]), circles[i][2], cv::Scalar(0,255,0), 1, 0, 0);
         //create a mask with circle
         cv::Mat mask = cv::Mat::zeros( image.rows, image.cols, CV_8UC1 );
-        cv::circle(mask, cv::Point(circles[i][0], circles[i][1]), circles[i][2], Scalar(255,255,255), -1, 8, 0 ); //-1 means filled
+        cv::circle(mask, cv::Point(circles[i][0], circles[i][1]), circles[i][2], cv::Scalar(255,255,255), -1, 8, 0 ); //-1 means filled
         cv::Scalar mean = cv::mean(image, mask);        
-        if (mean(2) >= 170 && mean(1) < 110 && mean(0) < 110) {
+        if (mean(2) >= 120 && mean(1) < 100 && mean(0) < 100) {
              j = {{"traffic", 1}}; //red light on
         } 
         else {
              j = {{"traffic", 0}}; //red light off
+              //std::cout << mean(2) << " " << mean(1) << " " << mean(0) << std::endl; 
         }
     }
     if (circles.size() == 0) {

@@ -19,7 +19,7 @@ struct line
     bool operator()(const line a, const line b) {
         return (a.size > b.size);
     }
-}
+};
 
 
 /// @brief do a min-max calculation (unsigned, e.g. 0~1)
@@ -44,10 +44,10 @@ std::string contour_pixels(const cv::Mat & gray);
 std::string find_lines(const cv::Mat & image);
 
 /// @brief search for a red circle (traffic light)?
-cv::Mat find_red_circle(
-                        const cv::Mat & image,
-                        const cv::Mat & gray
-                       );
+std::string find_red_circle(
+                             const cv::Mat & image,
+                             const cv::Mat & gray
+                            );
 
 /// @brief class handler for ORB
 /// @note  use for traffic light region detection
