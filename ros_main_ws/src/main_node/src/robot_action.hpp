@@ -71,26 +71,6 @@ struct action_interpreter
     }
 };
 
-struct action_bias
-{
-    float operator()(const action_type action)
-    {
-        if (action == action_type::forward) {
-            return 1.0;  // 70%
-        }
-        else if (action == action_type::backward) {
-            return 0.02; // 2%
-        }
-        else if (action == action_type::left) {
-            return 0.14; // 14%
-        }
-        else if (action == action_type::right) {
-            return 0.14; // 14%
-        }
-        return 0.;
-    }
-};
-
 /**
  * @class robot_action
  **/

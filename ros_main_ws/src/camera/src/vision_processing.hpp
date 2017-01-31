@@ -69,9 +69,9 @@ private:
 
     std::string to_json()
     {
-        nlohmann::json j = {{"left", left}, 
-                            {"right", right}, 
-                            {"centre", centre}, 
+        nlohmann::json j = {{"left", (int)left}, 
+                            {"right", (int)right}, 
+                            {"centre", (int)centre}, 
                             {"area", distance_to_qr()}};
         return j.dump();
     }

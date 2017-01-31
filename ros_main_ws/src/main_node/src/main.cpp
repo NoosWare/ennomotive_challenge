@@ -4,13 +4,14 @@
 #include "action_factory.hpp"
 #include "navigation.hpp"
 
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "main");
     ros::NodeHandle node;
     auto pub = node.advertise<std_msgs::String>("motors", 1000);
     
-    //auto factory = state_factory(node);
+    auto log = logger("training.data");
     auto a_factory = action_factory(node);
     auto nav = navigation(node);
 

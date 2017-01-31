@@ -9,6 +9,19 @@
 namespace cv_detect
 {
 
+struct line
+{
+    int x;
+    int y;
+    float yaw;
+    float size;
+
+    bool operator()(const line a, const line b) {
+        return (a.size > b.size);
+    }
+}
+
+
 /// @brief do a min-max calculation (unsigned, e.g. 0~1)
 float min_max_unsigned(float value, float min, float max);
 

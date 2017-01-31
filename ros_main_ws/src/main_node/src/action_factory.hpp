@@ -8,14 +8,16 @@
 #include <random>
 #include <chrono>
 
-class action_factory : public collision
+/// @TODO
+class action_factory : public collision, public sensor_fusion
 {
 public:
 
-    action_factory(ros::NodeHandle & node)
-    : collision(node), 
+    action_factory(ros::NodeHandle & node, std::string logfile)
+    : collision(node), sensor_fusion(node, logfile)
       gen__(std::chrono::system_clock::now().time_since_epoch().count())
     {}
+
 
     action_type max_action_scored()
     {

@@ -92,27 +92,27 @@ void slammer::get_pose()
 
 void slammer::collision_angles( std::vector<float> lidar_angles) 
 {
-    bool front, l_front, r_front, l_back, r_back, back;
-    front = l_front = r_front = l_back = r_back = back = false;
+    int front, l_front, r_front, l_back, r_back, back;
+    front = l_front = r_front = l_back = r_back = back = 0;
 
     for (const auto & angle : lidar_angles) {
         if (angle <= 30 || angle >= 330) {
-            front = true;
+            front = 1;
         }     
         else if (angle > 30 && angle <= 90) {
-            l_front = true;
+            l_front = 1;
         }
         else if (angle > 90 && angle <= 150) {
-            l_back = true;
+            l_back = 1;
         }
         else if (angle > 150 && angle <= 210) {
-            back = true;
+            back = 1;
         }
         else if (angle > 210 && angle <= 270) {
-            r_back = true;
+            r_back = 1;
         }
         else if (angle > 270 && angle < 330) {
-            r_front = true;
+            r_front = 1;
         }
     }
     std_msgs::String msg;

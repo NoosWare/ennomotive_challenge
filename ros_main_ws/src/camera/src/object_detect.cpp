@@ -77,7 +77,8 @@ std::string cv_detect::find_lines(const cv::Mat & image)
     // max # of gap points inside a line = 5
     cv::HoughLinesP(img, lines, 1, CV_PI/180, 50, 80, 5);
     nlohmann::json j;
-    std::vector<std::tuple<int, int, float, float>> data;
+    //std::vector<std::tuple<int, int, float, float>> data;
+    std::vector<cv_detect::line> data;
 
     for (std::size_t i = 0; i < lines.size(); i++) {
         cv::Vec4i l = lines[i];
@@ -96,49 +97,58 @@ std::string cv_detect::find_lines(const cv::Mat & image)
         // calculate size of line
         float length = std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
         if (theta != 0 && length != 0) {
-            j.push_back({{"x", min_max_unsigned(l[0], 0, image.cols)},
-                         {"y", min_max_unsigned(l[1], 0, image.rows)},
-                         {"yaw", min_max_signed(theta, -180, 180)},
-                         {"size", min_max_unsigned(length, 0, image.cols)}});
-
+            cv_detect::line line_data;
             // training data
-            data.push_back(std::make_tuple(min_max_unsigned(l[0], 0, image.cols),
-                                           min_max_unsigned(l[1], 0, image.rows),
-                                           min_max_signed(theta, -180, 180),
-                                           min_max_unsigned(length, 0, image.cols)));
+            line_data.x = min_max_unsigned(l[0], 0, image.cols);
+            line_data.y = min_max_unsigned(l[1], 0, image.rows);
+            line_data.yaw = min_max_signed(theta, -180, 180);
+            line_data.size = min_max_unsigned(length, 0, image.cols);
+            data.push_back(line_data);
         }
     }
+    ///sort larger lines
+    std::sort(data.begin(), data.end(), cv_detect::line);  
 
-    // 
-    std::string uid = index_lines(copy);
-    std::ofstream ofs;
-    ofs.open ("lines.dat", std::ofstream::out | std::ofstream::app);
-    ofs << uid;
-    for (const auto & entry : data) {
-        ofs << " " << std::get<0>(entry) << " " << std::get<1>(entry) 
-        << " " << std::get<2>(entry) << " " << std::get<3>(entry);
-    }
-    ofs << std::endl;
-    ofs.close();
-    // 
+    //add to json
+    // j.push_back({{"x", min_max_unsigned(l[0], 0, image.cols)},
+    //              {"y", min_max_unsigned(l[1], 0, image.rows)},
+    //              {"yaw", min_max_signed(theta, -180, 180)},
+    //              {"size", min_max_unsigned(length, 0, image.cols)}});
+
+
 
     return j.dump();
 }
 
-cv::Mat cv_detect::find_red_circle(const cv::Mat & image,
+std::string cv_detect::find_red_circle(const cv::Mat & image,
                                    const cv::Mat & gray)
 {
-    cv::Mat blurred;
+    cv::Mat blurred, colors;
     cv::GaussianBlur(gray, blurred, cv::Size(9, 9), 2, 2);
     std::vector<cv::Vec3f> circles;
+    nlohmann::json j;
 
     cv::HoughCircles(blurred, circles, CV_HOUGH_GRADIENT, 1, 5, 50, 50, 0, 0);
     std::cout << "circles: " << circles.size() << std::endl;
     for (std::size_t i = 0; i < circles.size(); i++) {
         // TODO: verify the color inside the circle (look at image, not blurred or grey)
         cv::circle(blurred, cv::Point(circles[i][0], circles[i][1]), circles[i][2], cv::Scalar(0,255,0), 1, 0, 0);
+        //create a mask with circle
+        cv::Mat mask = cv::Mat::zeros( image.rows, image.cols, CV_8UC1 );
+        cv::circle(mask, cv::Point(circles[i][0], circles[i][1]), circles[i][2], Scalar(255,255,255), -1, 8, 0 ); //-1 means filled
+        cv::Scalar mean = cv::mean(image, mask);        
+        if (mean(2) >= 170 && mean(1) < 110 && mean(0) < 110) {
+             j = {{"traffic", 1}}; //red light on
+        } 
+        else {
+             j = {{"traffic", 0}}; //red light off
+        }
     }
-    return blurred;
+    if (circles.size() == 0) {
+        j = {{"traffic", 0}};
+    }
+
+    return j.dump();
 }
 
 cv_detect::orb::orb(const cv::Mat & model)

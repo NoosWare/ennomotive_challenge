@@ -32,6 +32,18 @@ public:
                      {action_type::backward, false}};
     }
 
+    /// get detected collisions
+    std::map<action_type, bool> collisions() const
+    {
+        return actions__;
+    }
+
+    /// get actions scores from LIDAR
+    std::map<action_type, float> action_scores() const
+    {
+        return scores__;
+    }
+
     /// parse JSON of imminent collisions
     void read_data(const std_msgs::String::ConstPtr & msg)
     {
