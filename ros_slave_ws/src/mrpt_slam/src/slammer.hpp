@@ -41,7 +41,7 @@ private:
     double timer__ = 0.0f;
 
     mrpt::poses::CPose3D sensor__;
-    //mrpt::slam::COccupancyGridMap2D grid__;
+    mrpt::slam::COccupancyGridMap2D grid__;
 
     ros::Publisher poser__, collision__, free_way__;
 };

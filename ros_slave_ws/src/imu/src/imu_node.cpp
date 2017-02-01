@@ -22,9 +22,11 @@ int main(int argc, char *argv[])
         // read imu values into a message
         std_msgs::String msg;
         std::stringstream ss;
-        ss << imu->read() << std::endl;
+        std::string json = imu->read();
+        ss << json << std::endl;
         msg.data = ss.str();
-        ROS_INFO("%s", msg.data.c_str());
+        //ROS_INFO("%s", msg.data.c_str());
+        //std::cout << json << std::endl;
         pub.publish(msg);
         ros::spinOnce();
         loop_rate.sleep();

@@ -3,9 +3,9 @@
 slammer::slammer(ros::NodeHandle & node)
 : iniFile__("icp_config.ini")
 {
-    //poser__ = node.advertise<std_msgs::String>("coordinates", 100);
+    poser__ = node.advertise<std_msgs::String>("coordinates", 100);
     collision__ = node.advertise<std_msgs::String>("collision", 100);
-    //free_way__ = node.advertise<std_msgs::String>("distance", 100);
+    free_way__ = node.advertise<std_msgs::String>("distance", 100);
 
     start__ = ros::Time::now().toSec();
     timer__ = start__;
@@ -42,13 +42,13 @@ void slammer::read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan)
     for (int i = 0; i < count; i++) {
         obs->scan[i] = scan->ranges[i];
         obs->validRange[i] = (char)(scan->intensities[i]);
-        if (obs->scan[i] < 0.20) {
+        if (obs->scan[i] < 0.25) {
             angles.push_back(i);
         }        
     }
 
     collision_angles(angles);
-    //avg_distance(obs->scan, count, obs->validRange);
+    avg_distance(obs->scan, count, obs->validRange);
 
     auto lazor = mrpt::slam::CObservation2DRangeScanPtr();
     lazor.setFromPointerDoNotFreeAtDtor(obs.get());
@@ -58,11 +58,11 @@ void slammer::read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan)
     builder__.getCurrentPoseEstimation()->getMean(robotpose);
     auto pose = std::make_shared<mrpt::poses::CPose3D>(robotpose);
 
-    //grid__.insertObservation(obs.get(), pose.get());
-    //publish_pose(*pose.get());
+    grid__.insertObservation(obs.get(), pose.get());
+    publish_pose(*pose.get());
 
     if ((ros::Time::now().toSec() - start__) > 10) {
-        std::cout << "saving maps" << std::endl;
+        //std::cout << "saving maps" << std::endl;
         serialize();
     }
 }
@@ -78,7 +78,7 @@ void slammer::publish_pose(mrpt::poses::CPose3D pose)
     poser__.publish(msg);
 }
 
-void slammer::collision_angles( std::vector<float> lidar_angles) 
+void slammer::collision_angles(std::vector<float> lidar_angles) 
 {
     bool front, l_front, r_front, l_back, r_back, back;
     front = l_front = r_front = l_back = r_back = back = false;
@@ -113,6 +113,7 @@ void slammer::collision_angles( std::vector<float> lidar_angles)
                           };
     msg.data = json.dump();
     collision__.publish(msg);
+    //std::cout << json.dump() << std::endl;
 }
 
 void slammer::avg_distance( 

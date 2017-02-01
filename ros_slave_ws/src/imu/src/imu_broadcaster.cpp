@@ -39,9 +39,9 @@ std::string imu_broadcaster::read()
 
     // to JSON, to std::string
     nlohmann::json json = {
-        {"euler",  {{"x", (int)RAD2DEG(euler[0])},
+        /*{"euler",  {{"x", (int)RAD2DEG(euler[0])},
                     {"y", (int)RAD2DEG(euler[1])},
-                    {"z", (int)RAD2DEG(euler[2])}}},
+                    {"z", (int)RAD2DEG(euler[2])}}},*/
         {"magnetic",{{"x", (int)RAD2DEG(magnetic[0])},
                      {"y", (int)RAD2DEG(magnetic[1])},
                      {"z", (int)RAD2DEG(magnetic[2])}}}};
