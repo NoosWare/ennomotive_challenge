@@ -3,9 +3,9 @@
 slammer::slammer(ros::NodeHandle & node)
 : iniFile__("icp_config.ini")
 {
-    poser__ = node.advertise<std_msgs::String>("coordinates", 100);
+    //poser__ = node.advertise<std_msgs::String>("coordinates", 100);
     collision__ = node.advertise<std_msgs::String>("collision", 100);
-    free_way__ = node.advertise<std_msgs::String>("distance", 100);
+    //free_way__ = node.advertise<std_msgs::String>("distance", 100);
 
     start__ = ros::Time::now().toSec();
     timer__ = start__;
@@ -48,7 +48,7 @@ void slammer::read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan)
     }
 
     collision_angles(angles);
-    avg_distance(obs->scan, count, obs->validRange);
+    //avg_distance(obs->scan, count, obs->validRange);
 
     auto lazor = mrpt::slam::CObservation2DRangeScanPtr();
     lazor.setFromPointerDoNotFreeAtDtor(obs.get());
@@ -58,8 +58,8 @@ void slammer::read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan)
     builder__.getCurrentPoseEstimation()->getMean(robotpose);
     auto pose = std::make_shared<mrpt::poses::CPose3D>(robotpose);
 
-    grid__.insertObservation(obs.get(), pose.get());
-    publish_pose(*pose.get());
+    //grid__.insertObservation(obs.get(), pose.get());
+    //publish_pose(*pose.get());
 
     if ((ros::Time::now().toSec() - start__) > 10) {
         std::cout << "saving maps" << std::endl;
@@ -113,7 +113,6 @@ void slammer::collision_angles( std::vector<float> lidar_angles)
                           };
     msg.data = json.dump();
     collision__.publish(msg);
-
 }
 
 void slammer::avg_distance( 
@@ -154,7 +153,7 @@ void slammer::avg_distance(
               std::back_inserter(right));
 
     ///Average
-    std::vector<float> avg = { 0, 0, 0, 0};
+    std::vector<float> avg = {0, 0, 0, 0};
     std::vector<std::vector<float>> data = { front, left, right, back};
     int count = 0;
     
@@ -178,12 +177,6 @@ void slammer::avg_distance(
 void slammer::serialize()
 {
     builder__.saveCurrentEstimationToImage("icp_map", true);
-    grid__.saveAsBitmapFile("grid_map.png");
+    //grid__.saveAsBitmapFile("grid_map.png");
     start__ = ros::Time::now().toSec();
-
-    /*
-    std::ofstream coords("coordinates");
-    boost::archive::text_oarchive oa(coords);
-    oa & visited__;
-    */
 }

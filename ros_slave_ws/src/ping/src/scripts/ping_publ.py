@@ -20,6 +20,7 @@ def ReadDistance(pin):
    time.sleep(0.000005)
    GPIO.output(pin, 0)
    GPIO.setup(pin, GPIO.IN)
+   starttime = time.time()
 
    while GPIO.input(pin)==0:
       starttime = time.time()
