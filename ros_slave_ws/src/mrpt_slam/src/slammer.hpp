@@ -1,13 +1,12 @@
 #ifndef SLAMMER_HPP
 #define SLAMMER_HPP
-
+#include "includes.ihh"
 #include "planner.hpp"
-#include "navigator.hpp"
 
 #define RAD2DEG(x) ((x)*180./M_PI)
 #define M_PIf 3.14159265358979f
 
-class slammer : public planner, navigator
+class slammer 
 {
 public:
 

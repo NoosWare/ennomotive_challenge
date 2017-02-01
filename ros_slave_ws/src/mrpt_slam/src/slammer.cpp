@@ -1,7 +1,7 @@
 #include "slammer.hpp"
 
 slammer::slammer(ros::NodeHandle & node)
-: planner(), navigator(node), iniFile__("icp_config.ini")
+: iniFile__("icp_config.ini")
 {
     poser__ = node.advertise<std_msgs::String>("coordinates", 100);
     collision__ = node.advertise<std_msgs::String>("collision", 100);
@@ -14,9 +14,9 @@ slammer::slammer(ros::NodeHandle & node)
                                     0, 
                                     mrpt::utils::DEG2RAD(180)); // roll
 
-    if (grid__.loadFromBitmapFile("grid_map.png", 0.04)) {
-        std::cout << "loaded grid map" << std::endl;
-    }
+    //if (grid__.loadFromBitmapFile("grid_map.png", 0.04)) {
+    //    std::cout << "loaded grid map" << std::endl;
+    //}
     builder__.options.verbose = false;
     builder__.ICP_options.loadFromConfigFile(iniFile__, "MappingApplication");
     builder__.ICP_params.loadFromConfigFile(iniFile__, "ICP");
@@ -181,7 +181,9 @@ void slammer::serialize()
     grid__.saveAsBitmapFile("grid_map.png");
     start__ = ros::Time::now().toSec();
 
+    /*
     std::ofstream coords("coordinates");
     boost::archive::text_oarchive oa(coords);
     oa & visited__;
+    */
 }

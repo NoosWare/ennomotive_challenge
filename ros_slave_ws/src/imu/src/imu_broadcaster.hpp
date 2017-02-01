@@ -5,6 +5,7 @@
 #include "MinIMU9.hpp"
 #include "includes.ihh"
 #include "std_msgs/String.h"
+#define RAD2DEG(x) ((x)*180./M_PI)
 
 /**
  * @brief bridge class which uses IMU/I2C and publishes IMU sensor data

@@ -62,19 +62,16 @@ LSM303::LSM303(const char * i2cDeviceName)
     {
         sa0 = false;
 
-        if (i2c.tryReadByte(NON_D_MAG_ADDRESS, LSM303_WHO_AM_I_M) == DLM_WHO_ID)
-        {
+        if (i2c.tryReadByte(NON_D_MAG_ADDRESS, LSM303_WHO_AM_I_M) == DLM_WHO_ID) {
             // Detected LSM303DLM with SA0 low.
             device = Device::LSM303DLM;
         }
-        else
-        {
+        else {
             // Guess that it's an LSM303DLH with SA0 low.
             device = Device::LSM303DLH;
         }
     }
-    else
-    {
+    else {
         throw std::runtime_error("Could not detect accelerometer.");
     }
 

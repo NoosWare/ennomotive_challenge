@@ -32,6 +32,15 @@ def ReadDistance(pin):
    distance = duration * 34000 / 2
    return distance
 
+#Normalize distance
+def Normalize(distance):
+    normalized_value = 0; #too far
+    if distance <= 20:
+        #aux = distance / 20;
+        #normalized_value = (-1) * (1 - aux);
+        normalized_value = 1; #too close
+    return normalized_value
+
 # Publish value sensor
 def ping_distance():
 
@@ -41,8 +50,9 @@ def ping_distance():
     print("Ping running...")
     while not rospy.is_shutdown():
         distance = ReadDistance(11)
-        print distance
-        pub.publish(str(distance))
+        #print distance
+        normalize = Normalize(distance)
+        pub.publish(str(normalize))
         rate.sleep()
 
 if __name__ == '__main__':
