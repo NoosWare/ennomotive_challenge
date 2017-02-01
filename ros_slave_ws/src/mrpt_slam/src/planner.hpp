@@ -23,7 +23,8 @@ public:
     // callback for laser data
     std::deque<mrpt::math::TPoint2D> path_planner(
                                                   const mrpt::slam::COccupancyGridMap2D & map,
-                                                  mrpt::poses::CPose3D robotpose
+                                                  mrpt::poses::CPose3D start,
+                                                  mrpt::poses::CPose3D goal
                                                  ); 
 
 private:

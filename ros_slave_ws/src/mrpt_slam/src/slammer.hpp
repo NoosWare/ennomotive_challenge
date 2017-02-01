@@ -1,28 +1,12 @@
 #ifndef SLAMMER_HPP
 #define SLAMMER_HPP
 
-#include <mrpt/poses/CPose3D.h>
-#include <mrpt/slam/CMetricMapBuilderICP.h>
-#include <mrpt/slam/CObservation2DRangeScan.h>
-#include <mrpt/utils/CConfigFile.h>
-
-#include "ros/ros.h"
-#include "std_msgs/String.h"
-#include "sensor_msgs/LaserScan.h"
-#include "json.hpp"
-#include <math.h>
-#include <cmath>
 #include "planner.hpp"
 #include "navigator.hpp"
-#include <functional>
-#include <numeric>
 
 #define RAD2DEG(x) ((x)*180./M_PI)
 #define M_PIf 3.14159265358979f
 
-// TODO: create a publisher which sends JSON coordinate messages(robotpose) - run every 100ms
-// TODO  create a subscriber (`planner`) which receives requests for a path
-// TODO: allow a constuctor which loads an existing map
 class slammer : public planner, navigator
 {
 public:
@@ -32,19 +16,23 @@ public:
     // callback for laser data
     void read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan);
 
-    void calculate_path(mrpt::poses::CPose3D robotpose);
+    // publish pose data
+    void publish_pose(mrpt::poses::CPose3D pose);
 
-    void get_pose();
+    // find collision angles
+    void collision_angles(std::vector<float> lidar_angles);
 
-    void collision_angles( std::vector<float> lidar_angles);
-
-    void avg_distance(  std::vector<float> lidar_angles, 
-                            int counter,
-                            std::vector<char> valid_data
+    // average lazor readings
+    void avg_distance(  
+                        std::vector<float> lidar_angles, 
+                        int counter,
+                        std::vector<char> valid_data
                      );
 
-private:
+    // save all data (gridmap, icpmap, coordinate data)
+    void serialize();
 
+private:
     mrpt::slam::CMetricMapBuilderICP builder__;
     mrpt::utils::CConfigFile iniFile__;
     
@@ -57,7 +45,5 @@ private:
     mrpt::slam::COccupancyGridMap2D grid__;
 
     ros::Publisher poser__, collision__, free_way__;
-    
-    bool loaded__ = false;
 };
 #endif

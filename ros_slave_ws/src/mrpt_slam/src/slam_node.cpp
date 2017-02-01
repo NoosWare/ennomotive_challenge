@@ -19,7 +19,6 @@ int main(int argc, char **argv)
 
     // "/scan" is for RPLIDAR messages
     ros::Subscriber sub = n.subscribe<sensor_msgs::LaserScan>("/scan", 1000, &slammer::read_lazors, &slam_obj);
-    slam_obj.get_pose();
 
     ros::spin();
     loop_rate.sleep();

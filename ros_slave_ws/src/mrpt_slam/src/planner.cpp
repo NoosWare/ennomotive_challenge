@@ -8,21 +8,21 @@ planner::planner()
 
 std::deque<mrpt::math::TPoint2D> planner::path_planner(
                                                         const mrpt::slam::COccupancyGridMap2D & map,
-                                                        mrpt::poses::CPose3D    robotpose
-                                                      )
+                                                        mrpt::poses::CPose3D start,
+                                                        mrpt::poses::CPose3D goal                                                                                       )
 {
     std::deque<mrpt::math::TPoint2D> path;
-    bool path_found = false;
+    bool not_found = false;
 
     std::cout << "computePath" << std::endl;
     path_planner__.computePath(map,
-                               mrpt::poses::CPose2D(robotpose.x(), robotpose.y(), 0),
-                               mrpt::poses::CPose2D(-1.51, 0.035, 0),
+                               mrpt::poses::CPose2D(start.x(), start.y(), start.yaw()),
+                               mrpt::poses::CPose2D(goal.x(), goal.y(), goal.yaw()),
                                path,
-                               path_found, 
+                               not_found, 
                                5); //default
      
-        std::cout << "Path found " << path_found << " steps: "<< path.size() << " steps" << std::endl;    
+    std::cout << "Path found " << not_found << " steps: "<< path.size() << " steps" << std::endl;    
     return path;
 }
 

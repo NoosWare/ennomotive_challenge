@@ -16,12 +16,12 @@ slammer::slammer(ros::NodeHandle & node)
 
     if (grid__.loadFromBitmapFile("grid_map.png", 0.04)) {
         std::cout << "loaded grid map" << std::endl;
-        loaded__ = true;
     }
     builder__.options.verbose = false;
     builder__.ICP_options.loadFromConfigFile(iniFile__, "MappingApplication");
     builder__.ICP_params.loadFromConfigFile(iniFile__, "ICP");
     builder__.initialize();
+    //builder__.enableMapUpdating();
 }    
 
 void slammer::read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan)
@@ -58,40 +58,21 @@ void slammer::read_lazors(const sensor_msgs::LaserScan::ConstPtr & scan)
     builder__.getCurrentPoseEstimation()->getMean(robotpose);
     auto pose = std::make_shared<mrpt::poses::CPose3D>(robotpose);
 
-    if (!loaded__) {
-        grid__.insertObservation(obs.get(), pose.get());
-    }
+    grid__.insertObservation(obs.get(), pose.get());
+    publish_pose(*pose.get());
 
-    // TODO: move loop out of here, this callbacle by a topic `planner`
-    //calculate_path(robotpose);
-    get_pose();
-    //if ((ros::Time::now().toSec() - timer__) > 0.1) {
-    //navigator::navigate(robotpose, obs->scan);
-    //    timer__ = ros::Time::now().toSec();
-    //}
-
-    if ((ros::Time::now().toSec() - start__) > 30) {
-        builder__.saveCurrentEstimationToImage("icp_map", true);
-        if (!loaded__) {
-            grid__.saveAsBitmapFile("grid_map.png");
-        }
-        start__ = ros::Time::now().toSec();
+    if ((ros::Time::now().toSec() - start__) > 10) {
+        std::cout << "saving maps" << std::endl;
+        serialize();
     }
 }
 
-void slammer::calculate_path(mrpt::poses::CPose3D robotpose)
-{
-    planner::path_planner(grid__, robotpose);
-}
-
-void slammer::get_pose()
+void slammer::publish_pose(mrpt::poses::CPose3D pose)
 {
     std_msgs::String msg;
-    mrpt::poses::CPose3D robotpose;
-    builder__.getCurrentPoseEstimation()->getMean(robotpose);
-    nlohmann::json json = {{"x", robotpose.x()},
-                           {"y", robotpose.y()},
-                           {"theta", robotpose.yaw()}
+    nlohmann::json json = {{"x", pose.x()},
+                           {"y", pose.y()},
+                           {"theta", pose.yaw()}
                           };
     msg.data = json.dump();
     poser__.publish(msg);
@@ -189,10 +170,18 @@ void slammer::avg_distance(
                            {"left",  left_score},
                            {"back",  back_score}
                           };
-
     msg.data = json.dump();
     free_way__.publish(msg);
-
     //std::cout << front_score << " " << right_score << " " << back_score << " " << left_score  << std::endl;
+}
 
+void slammer::serialize()
+{
+    builder__.saveCurrentEstimationToImage("icp_map", true);
+    grid__.saveAsBitmapFile("grid_map.png");
+    start__ = ros::Time::now().toSec();
+
+    std::ofstream coords("coordinates");
+    boost::archive::text_oarchive oa(coords);
+    oa & visited__;
 }

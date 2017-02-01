@@ -1,0 +1,17 @@
+#include <mrpt/poses/CPose3D.h>
+#include <mrpt/slam/CMetricMapBuilderICP.h>
+#include <mrpt/slam/CObservation2DRangeScan.h>
+#include <mrpt/utils/CConfigFile.h>
+
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+#include "sensor_msgs/LaserScan.h"
+#include "json.hpp"
+#include <math.h>
+#include <cmath>
+#include <functional>
+#include <numeric>
+#include <mutex>
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
