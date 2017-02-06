@@ -10,7 +10,7 @@ int main(int argc, char **argv)
     auto pub = node.advertise<std_msgs::String>("motors", 1000);
     
     auto at_fact = action_factory(node, "samples");
-    auto st_fact = state_factory(node);
+    //auto st_fact = state_factory(node);
 
     ros::Rate loop_rate(10);
     int count = 0;
@@ -28,8 +28,8 @@ int main(int argc, char **argv)
         // training sample for ANN        
         //at_fact.add_sample();
 
-        auto st = st_fact.get_state();
-        st.print();
+        //auto st = st_fact.get_state();
+        //st.print();
 
         robot_action a_t(pub, atype);
         a_t.run();

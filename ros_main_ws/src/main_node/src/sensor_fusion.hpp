@@ -155,7 +155,7 @@ public:
             label[4] = (obj["left_speed"] == 0 && 
                         obj["right_speed"]  == 0 ? 1.f : 0.f);
         }
-        std::cout << label.transpose() << std::endl;
+        //std::cout << label.transpose() << std::endl;
     }
 
     void train_ann()
