@@ -9,8 +9,12 @@ slammer::slammer(ros::NodeHandle & node)
 
     start__ = ros::Time::now().toSec();
     timer__ = start__;
+    // old sensor position TODO: adjust X, Y, Z.
+    // Yaw is zero now (aligned to X axis)
+    // Pitch is zero
+    // Rollw is inverted (else mape is mirrored)
     sensor__ = mrpt::poses::CPose3D(0.1, 0, 0.1, 
-                                    mrpt::utils::DEG2RAD(7), // yaw
+                                    mrpt::utils::DEG2RAD(0), // yaw
                                     0, 
                                     mrpt::utils::DEG2RAD(180)); // roll
 
